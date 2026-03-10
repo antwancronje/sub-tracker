@@ -125,7 +125,7 @@
   }
   .status-card {
     border-radius: 12px;
-    padding: 20px;
+    padding: 24px;
     text-align: center;
     cursor: pointer;
     transition: all 0.15s;
@@ -151,6 +151,7 @@
   .status-open { background: #0F181E; }
   .status-open .status-label { color: #74c0fc; }
   .status-open.active-filter { outline: 2px solid #74c0fc; outline-offset: -2px; }
+  .status-overdue.active-filter { outline: 2px solid #ff6b6b; outline-offset: -2px; }
 
   /* STATUS DETAIL PANEL */
   #status-detail {
@@ -190,7 +191,7 @@
     margin-bottom: 20px;
     flex-wrap: wrap;
   }
-  .cat-btn, .pf-btn {
+  .cat-btn {
     padding: 8px 16px;
     border-radius: 20px;
     border: 1px solid #1a2a35;
@@ -201,8 +202,8 @@
     font-family: 'Inter', sans-serif;
     transition: all 0.15s;
   }
-  .cat-btn:hover, .pf-btn:hover { border-color: #2a4a5a; color: #fff; }
-  .cat-btn.active, .pf-btn.active { background: #1a2a35; color: #fff; border-color: #2a4a5a; }
+  .cat-btn:hover:hover { border-color: #2a4a5a; color: #fff; }
+  .cat-btn.active.active { background: #1a2a35; color: #fff; border-color: #2a4a5a; }
 
   /* ADD BUTTON */
   .btn-add {
@@ -481,9 +482,9 @@
   .task-date.overdue { color: #dc2626; font-weight: 500; }
   .task-notes-preview { font-size: 12px; color: #666; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .priority-dot { width: 8px; height: 8px; min-width: 8px; border-radius: 50%; }
-  .priority-dot.high { background: #ef4444; }
-  .priority-dot.medium { background: #f59e0b; }
-  .priority-dot.low { background: #22c55e; }
+  .priority-dot.high { background: #ff6b6b; }
+  .priority-dot.medium { background: #ffa94d; }
+  .priority-dot.low { background: #74c0fc; }
 
   .empty-tasks {
     text-align: center;
@@ -505,8 +506,8 @@
     header h1 { font-size: 1.8rem; }
     .sub-name { font-size: 16px; }
     .sub-amount { font-size: 1.5rem; }
-    .status-card .count { font-size: 2.4rem; }
-    .status-card { padding: 16px; }
+    .status-card .count { font-size: 2.6rem; }
+    .status-card { padding: 20px; }
   }
 </style>
 </head>
@@ -570,7 +571,6 @@
         <div class="status-label">Overdue</div>
       </div>
     </div>
-    <div id="task-priority-filter" class="filter-pills"></div>
     <button class="btn-add" onclick="openTM()">+ Add Task</button>
     <div id="task-container"></div>
   </div>
@@ -877,30 +877,17 @@ async function deleteSub() {
 }
 
 // ==================== TASKS ====================
-let _tasks = [], _editTid = null, _tPriorityFilter = 'all', _tStatusFilter = 'open';
+let _tasks = [], _editTid = null, _tStatusFilter = 'open';
 let _collapsedGroups = {};
 
 async function loadTasks() {
   const { data, error } = await sb.from('tasks').select('*').order('created_at', { ascending: false });
   if (error) { console.error(error); return; }
   _tasks = data || [];
-  renderTaskPriorityFilter();
   renderT();
 }
 
-function renderTaskPriorityFilter() {
-  const pills = [
-    { key: 'all', label: 'All' },
-    { key: 'high', label: 'High' },
-    { key: 'medium', label: 'Medium' },
-    { key: 'low', label: 'Low' }
-  ];
-  document.getElementById('task-priority-filter').innerHTML = pills.map(p =>
-    '<button class="pf-btn ' + (p.key === _tPriorityFilter ? 'active' : '') + '" onclick="setTPF(\'' + p.key + '\')">' + p.label + '</button>'
-  ).join('');
-}
 
-function setTPF(key) { _tPriorityFilter = key; renderTaskPriorityFilter(); renderT(); }
 
 function toggleTaskStatusFilter(type) {
   if (_tStatusFilter === type) { _tStatusFilter = 'open'; }
@@ -953,6 +940,7 @@ function renderT() {
   // Active filter highlight
   document.getElementById('task-card-open').classList.toggle('active-filter', _tStatusFilter === 'open');
   document.getElementById('task-card-overdue').classList.toggle('active-filter', _tStatusFilter === 'overdue');
+  document.getElementById('task-card-open').classList.toggle('active-filter', _tStatusFilter === 'open');
 
   // Filter tasks
   let filtered = _tasks.filter(t => {
@@ -961,9 +949,7 @@ function renderT() {
     return true;
   });
 
-  if (_tPriorityFilter !== 'all') {
-    filtered = filtered.filter(t => t.priority === _tPriorityFilter);
-  }
+
 
   if (!filtered.length) {
     const msg = _tStatusFilter === 'overdue' ? 'No overdue tasks.' : 'All clear.';
