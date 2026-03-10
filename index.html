@@ -151,9 +151,6 @@
   .status-open { background: #0F181E; }
   .status-open .status-label { color: #74c0fc; }
   .status-open.active-filter { outline: 2px solid #74c0fc; outline-offset: -2px; }
-  .status-done { background: #102a10; }
-  .status-done .status-label { color: #69db7c; }
-  .status-done.active-filter { outline: 2px solid #69db7c; outline-offset: -2px; }
 
   /* STATUS DETAIL PANEL */
   #status-detail {
@@ -483,7 +480,7 @@
   .task-date { font-size: 12px; color: #888; }
   .task-date.overdue { color: #dc2626; font-weight: 500; }
   .task-notes-preview { font-size: 12px; color: #666; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .priority-dot { width: 7px; height: 7px; min-width: 7px; border-radius: 50%; }
+  .priority-dot { width: 8px; height: 8px; min-width: 8px; border-radius: 50%; }
   .priority-dot.high { background: #ef4444; }
   .priority-dot.medium { background: #f59e0b; }
   .priority-dot.low { background: #22c55e; }
@@ -568,9 +565,9 @@
         <div class="count" id="task-open-count">0</div>
         <div class="status-label">Open</div>
       </div>
-      <div class="status-card status-done" id="task-card-done" onclick="toggleTaskStatusFilter('done')">
-        <div class="count" id="task-done-count">0</div>
-        <div class="status-label">Done</div>
+      <div class="status-card status-overdue" id="task-card-overdue" onclick="toggleTaskStatusFilter('overdue')">
+        <div class="count" id="task-overdue-count">0</div>
+        <div class="status-label">Overdue</div>
       </div>
     </div>
     <div id="task-priority-filter" class="filter-pills"></div>
@@ -949,18 +946,18 @@ function toggleGroup(key) {
 function renderT() {
   // Update stat cards
   const openCount = _tasks.filter(t => t.status !== 'done').length;
-  const doneCount = _tasks.filter(t => t.status === 'done').length;
+  const overdueTaskCount = _tasks.filter(t => t.status !== 'done' && t.due_date && _tDateKey(t.due_date) === 'overdue').length;
   document.getElementById('task-open-count').textContent = openCount;
-  document.getElementById('task-done-count').textContent = doneCount;
+  document.getElementById('task-overdue-count').textContent = overdueTaskCount;
 
   // Active filter highlight
   document.getElementById('task-card-open').classList.toggle('active-filter', _tStatusFilter === 'open');
-  document.getElementById('task-card-done').classList.toggle('active-filter', _tStatusFilter === 'done');
+  document.getElementById('task-card-overdue').classList.toggle('active-filter', _tStatusFilter === 'overdue');
 
   // Filter tasks
   let filtered = _tasks.filter(t => {
     if (_tStatusFilter === 'open') return t.status !== 'done';
-    if (_tStatusFilter === 'done') return t.status === 'done';
+    if (_tStatusFilter === 'overdue') return t.status !== 'done' && t.due_date && _tDateKey(t.due_date) === 'overdue';
     return true;
   });
 
@@ -969,15 +966,13 @@ function renderT() {
   }
 
   if (!filtered.length) {
-    const msg = _tStatusFilter === 'done' ? 'No completed tasks yet.' : 'All clear.';
-    document.getElementById('task-container').innerHTML = '<div class="empty-tasks"><h3>' + (_tStatusFilter === 'done' ? 'NOTHING YET' : 'ALL CLEAR') + '</h3><p>' + msg + '</p></div>';
+    const msg = _tStatusFilter === 'overdue' ? 'No overdue tasks.' : 'All clear.';
+    document.getElementById('task-container').innerHTML = '<div class="empty-tasks"><h3>' + (_tStatusFilter === 'overdue' ? 'ALL GOOD' : 'ALL CLEAR') + '</h3><p>' + msg + '</p></div>';
     return;
   }
 
   // Group tasks
-  const groupOrder = _tStatusFilter === 'done'
-    ? [{ key: 'done', label: 'COMPLETED', cls: 'no-date' }]
-    : [
+  const groupOrder = [
         { key: 'overdue', label: 'OVERDUE', cls: 'overdue' },
         { key: 'today', label: 'TODAY', cls: 'today' },
         { key: 'this-week', label: 'THIS WEEK', cls: 'this-week' },
@@ -987,15 +982,11 @@ function renderT() {
       ];
 
   const groups = {};
-  if (_tStatusFilter === 'done') {
-    groups['done'] = filtered;
-  } else {
-    filtered.forEach(t => {
-      const k = _tDateKey(t.due_date);
-      if (!groups[k]) groups[k] = [];
-      groups[k].push(t);
-    });
-  }
+  filtered.forEach(t => {
+    const k = _tDateKey(t.due_date);
+    if (!groups[k]) groups[k] = [];
+    groups[k].push(t);
+  });
 
   // Sort within groups: high > medium > low, then by due date
   const prioVal = { high: 0, medium: 1, low: 2 };
