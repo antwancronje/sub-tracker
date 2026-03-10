@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sub Tracker</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&display=swap');
+  
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    background: #080808;
+    color: #e0e0e0;
+    font-family: 'Inter', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+  }
+
+  /* LOGIN */
+  #login-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  #login-screen h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3rem;
+    letter-spacing: 4px;
+    margin-bottom: 40px;
+    color: #fff;
+  }
+  #login-screen input {
+    width: 300px;
+    padding: 14px 18px;
+    margin-bottom: 16px;
+    background: #0F181E;
+    border: 1px solid #1a2a35;
+    border-radius: 8px;
+    color: #e0e0e0;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+  }
+  #login-screen input:focus { border-color: #2a4a5a; }
+  #login-screen button {
+    width: 300px;
+    padding: 14px;
+    background: #1a2a35;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+  #login-screen button:hover { background: #2a4a5a; }
+  #login-error { color: #ff6b6b; margin-top: 12px; font-size: 13px; }
+
+  /* APP */
+  #app { display: none; max-width: 700px; margin: 0 auto; padding: 20px 16px; }
+  
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #1a1a1a;
+  }
+  header h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    letter-spacing: 3px;
+    color: #fff;
+  }
+  #btn-logout {
+    background: none;
+    border: 1px solid #333;
+    color: #888;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  #btn-logout:hover { border-color: #555; color: #ccc; }
+
+  /* TOTALS */
+  #totals {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 30px;
+  }
+  .total-card {
+    background: #0F181E;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+  }
+  .total-card .label { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #666; margin-bottom: 8px; }
+  .total-card .value { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; color: #fff; }
+
+  /* ADD BUTTON */
+  #btn-add {
+    width: 100%;
+    padding: 16px;
+    background: #0F181E;
+    border: 2px dashed #1a2a35;
+    border-radius: 10px;
+    color: #555;
+    font-size: 15px;
+    cursor: pointer;
+    margin-bottom: 24px;
+    transition: all 0.2s;
+  }
+  #btn-add:hover { border-color: #2a4a5a; color: #aaa; }
+
+  /* SECTIONS */
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+    color: #ff6b6b;
+    margin: 24px 0 12px 0;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #1a1a1a;
+  }
+  .section-title.upcoming { color: #ffa94d; }
+  .section-title.active { color: #69db7c; }
+  .section-title.bills { color: #74c0fc; }
+
+  /* SUBSCRIPTION CARD */
+  .sub-card {
+    background: #0F181E;
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .sub-card:hover { background: #142028; }
+  .sub-left { flex: 1; }
+  .sub-name { font-weight: 500; color: #fff; font-size: 15px; }
+  .sub-detail { font-size: 12px; color: #666; margin-top: 4px; }
+  .sub-right { text-align: right; }
+  .sub-amount { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; color: #fff; }
+  .sub-cycle { font-size: 11px; color: #555; }
+  .sub-unknown { color: #555; font-size: 13px; }
+
+  /* MODAL */
+  #modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  #modal-overlay.show { display: flex; }
+  #modal {
+    background: #0F181E;
+    border-radius: 14px;
+    padding: 30px 24px;
+    width: 100%;
+    max-width: 420px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  #modal h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem;
+    letter-spacing: 2px;
+    color: #fff;
+    margin-bottom: 24px;
+  }
+  .form-group { margin-bottom: 16px; }
+  .form-group label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #666;
+    margin-bottom: 6px;
+  }
+  .form-group input, .form-group select {
+    width: 100%;
+    padding: 12px 14px;
+    background: #080808;
+    border: 1px solid #1a2a35;
+    border-radius: 8px;
+    color: #e0e0e0;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+  }
+  .form-group input:focus, .form-group select:focus { border-color: #2a4a5a; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  
+  #btn-save {
+    width: 100%;
+    padding: 14px;
+    background: #1a2a35;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+  #btn-save:hover { background: #2a4a5a; }
+  #btn-delete {
+    width: 100%;
+    padding: 12px;
+    background: none;
+    border: 1px solid #3a1a1a;
+    border-radius: 8px;
+    color: #ff6b6b;
+    font-size: 13px;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  #btn-delete:hover { background: #2a1010; }
+  #btn-cancel-modal {
+    width: 100%;
+    padding: 12px;
+    background: none;
+    border: none;
+    color: #555;
+    font-size: 13px;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #333;
+    font-size: 14px;
+  }
+
+  @media (max-width: 500px) {
+    #modal { padding: 24px 18px; }
+    .total-card .value { font-size: 1.6rem; }
+    header h1 { font-size: 1.6rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <h1>SUB TRACKER</h1>
+  <input type="email" id="login-email" placeholder="Email">
+  <input type="password" id="login-password" placeholder="Password">
+  <button onclick="login()">Sign In</button>
+  <div id="login-error"></div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <header>
+    <h1>SUBSCRIPTIONS</h1>
+    <button id="btn-logout" onclick="logout()">Sign Out</button>
+  </header>
+
+  <div id="totals">
+    <div class="total-card">
+      <div class="label">Monthly ZAR</div>
+      <div class="value" id="total-zar">R0</div>
+    </div>
+    <div class="total-card">
+      <div class="label">Monthly USD</div>
+      <div class="value" id="total-usd">$0</div>
+    </div>
+  </div>
+
+  <button id="btn-add" onclick="openModal()">+ Add Subscription</button>
+
+  <div id="sub-list"></div>
+</div>
+
+<!-- MODAL -->
+<div id="modal-overlay" onclick="closeModalOutside(event)">
+  <div id="modal">
+    <h2 id="modal-title">ADD SUBSCRIPTION</h2>
+    <div class="form-group">
+      <label>Name</label>
+      <input type="text" id="f-name" placeholder="e.g. Netflix">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Amount</label>
+        <input type="number" id="f-amount" placeholder="0.00" step="0.01">
+      </div>
+      <div class="form-group">
+        <label>Currency</label>
+        <select id="f-currency">
+          <option value="ZAR">ZAR (R)</option>
+          <option value="USD">USD ($)</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Cycle</label>
+        <select id="f-cycle">
+          <option value="monthly">Monthly</option>
+          <option value="yearly">Yearly</option>
+          <option value="once-off">Once-off</option>
+          <option value="as-needed">As needed</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Type</label>
+        <select id="f-type">
+          <option value="subscription">Subscription</option>
+          <option value="bill">Bill</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Next Renewal</label>
+        <input type="date" id="f-renewal">
+      </div>
+      <div class="form-group">
+        <label>Last Payment</label>
+        <input type="date" id="f-lastpay">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Notes</label>
+      <input type="text" id="f-notes" placeholder="Optional notes">
+    </div>
+    <button id="btn-save" onclick="saveSub()">Save</button>
+    <button id="btn-delete" onclick="deleteSub()" style="display:none;">Delete</button>
+    <button id="btn-cancel-modal" onclick="closeModal()">Cancel</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const SUPA_URL = 'https://guiacshwxuyvojtgnynf.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1aWFjc2h3eHV5dm9qdGdueW5mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NDQ1MTMsImV4cCI6MjA4ODEyMDUxM30.73JPhyIehnk0hOczkwiP9UH6Yld_eVJYsgnDNcZjWr4';
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+let subs = [];
+let editingId = null;
+let currentUser = null;
+
+// AUTH
+async function login() {
+  const email = document.getElementById('login-email').value;
+  const pw = document.getElementById('login-password').value;
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
+  if (error) {
+    document.getElementById('login-error').textContent = error.message;
+    return;
+  }
+  currentUser = data.user;
+  showApp();
+}
+
+async function logout() {
+  await sb.auth.signOut();
+  currentUser = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+async function checkSession() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    showApp();
+  }
+}
+
+async function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  await loadSubs();
+}
+
+// DATA
+async function loadSubs() {
+  const { data, error } = await sb.from('subscriptions')
+    .select('*')
+    .eq('status', 'active')
+    .order('next_renewal', { ascending: true, nullsFirst: false });
+  if (error) { console.error(error); return; }
+  subs = data || [];
+  render();
+}
+
+function render() {
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const in7 = new Date(today); in7.setDate(in7.getDate() + 7);
+  const in14 = new Date(today); in14.setDate(in14.getDate() + 14);
+
+  let overdue = [], thisWeek = [], upcoming = [], active = [], bills = [];
+
+  subs.forEach(s => {
+    const r = s.next_renewal ? new Date(s.next_renewal + 'T00:00:00') : null;
+    if (s.type === 'bill') {
+      if (r && r < today) { overdue.push(s); }
+      else { bills.push(s); }
+    } else if (r && r < today) {
+      overdue.push(s);
+    } else if (r && r <= in7) {
+      thisWeek.push(s);
+    } else if (r && r <= in14) {
+      upcoming.push(s);
+    } else {
+      active.push(s);
+    }
+  });
+
+  let html = '';
+  if (overdue.length) {
+    html += '<div class="section-title">OVERDUE</div>';
+    overdue.forEach(s => html += card(s));
+  }
+  if (thisWeek.length) {
+    html += '<div class="section-title upcoming">DUE THIS WEEK</div>';
+    thisWeek.forEach(s => html += card(s));
+  }
+  if (upcoming.length) {
+    html += '<div class="section-title upcoming">DUE NEXT 14 DAYS</div>';
+    upcoming.forEach(s => html += card(s));
+  }
+  if (active.length) {
+    html += '<div class="section-title active">SUBSCRIPTIONS</div>';
+    active.forEach(s => html += card(s));
+  }
+  if (bills.length) {
+    html += '<div class="section-title bills">BILLS</div>';
+    bills.forEach(s => html += card(s));
+  }
+  if (!subs.length) {
+    html = '<div class="empty-state">No subscriptions yet. Tap + to add one.</div>';
+  }
+
+  document.getElementById('sub-list').innerHTML = html;
+  updateTotals();
+}
+
+function card(s) {
+  const amt = s.amount ? `${s.currency === 'USD' ? '$' : 'R'}${parseFloat(s.amount).toFixed(2)}` : '';
+  const cyc = s.cycle === 'monthly' ? '/mo' : s.cycle === 'yearly' ? '/yr' : '';
+  const renewal = s.next_renewal ? formatDate(s.next_renewal) : '';
+  return `<div class="sub-card" onclick="openEdit('${s.id}')">
+    <div class="sub-left">
+      <div class="sub-name">${s.name}</div>
+      <div class="sub-detail">${renewal}${s.notes ? ' · ' + s.notes : ''}</div>
+    </div>
+    <div class="sub-right">
+      ${amt ? `<div class="sub-amount">${amt}</div><div class="sub-cycle">${cyc}</div>` : '<div class="sub-unknown">—</div>'}
+    </div>
+  </div>`;
+}
+
+function formatDate(d) {
+  const dt = new Date(d + 'T00:00:00');
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${dt.getDate()} ${months[dt.getMonth()]}`;
+}
+
+function updateTotals() {
+  let zar = 0, usd = 0;
+  subs.forEach(s => {
+    if (!s.amount) return;
+    const amt = parseFloat(s.amount);
+    const monthly = s.cycle === 'yearly' ? amt / 12 : s.cycle === 'monthly' ? amt : 0;
+    if (s.currency === 'ZAR') zar += monthly;
+    else if (s.currency === 'USD') usd += monthly;
+  });
+  document.getElementById('total-zar').textContent = `R${Math.round(zar)}`;
+  document.getElementById('total-usd').textContent = `$${Math.round(usd)}`;
+}
+
+// MODAL
+function openModal() {
+  editingId = null;
+  document.getElementById('modal-title').textContent = 'ADD SUBSCRIPTION';
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-amount').value = '';
+  document.getElementById('f-currency').value = 'ZAR';
+  document.getElementById('f-cycle').value = 'monthly';
+  document.getElementById('f-type').value = 'subscription';
+  document.getElementById('f-renewal').value = '';
+  document.getElementById('f-lastpay').value = '';
+  document.getElementById('f-notes').value = '';
+  document.getElementById('btn-delete').style.display = 'none';
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+function openEdit(id) {
+  const s = subs.find(x => x.id === id);
+  if (!s) return;
+  editingId = id;
+  document.getElementById('modal-title').textContent = 'EDIT SUBSCRIPTION';
+  document.getElementById('f-name').value = s.name;
+  document.getElementById('f-amount').value = s.amount || '';
+  document.getElementById('f-currency').value = s.currency || 'ZAR';
+  document.getElementById('f-cycle').value = s.cycle || 'monthly';
+  document.getElementById('f-type').value = s.type || 'subscription';
+  document.getElementById('f-renewal').value = s.next_renewal || '';
+  document.getElementById('f-lastpay').value = s.last_payment || '';
+  document.getElementById('f-notes').value = s.notes || '';
+  document.getElementById('btn-delete').style.display = 'block';
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('show');
+  editingId = null;
+}
+
+function closeModalOutside(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+}
+
+async function saveSub() {
+  const obj = {
+    name: document.getElementById('f-name').value.trim(),
+    amount: document.getElementById('f-amount').value ? parseFloat(document.getElementById('f-amount').value) : null,
+    currency: document.getElementById('f-currency').value,
+    cycle: document.getElementById('f-cycle').value,
+    type: document.getElementById('f-type').value,
+    next_renewal: document.getElementById('f-renewal').value || null,
+    last_payment: document.getElementById('f-lastpay').value || null,
+    notes: document.getElementById('f-notes').value.trim(),
+    status: 'active',
+    user_id: currentUser.id
+  };
+  if (!obj.name) return;
+
+  let error;
+  if (editingId) {
+    ({ error } = await sb.from('subscriptions').update(obj).eq('id', editingId));
+  } else {
+    ({ error } = await sb.from('subscriptions').insert(obj));
+  }
+  if (error) { console.error(error); alert('Error: ' + error.message); return; }
+  closeModal();
+  await loadSubs();
+}
+
+async function deleteSub() {
+  if (!editingId) return;
+  if (!confirm('Delete this subscription?')) return;
+  const { error } = await sb.from('subscriptions').delete().eq('id', editingId);
+  if (error) { console.error(error); return; }
+  closeModal();
+  await loadSubs();
+}
+
+// INIT
+checkSession();
+</script>
+</body>
+</html>
