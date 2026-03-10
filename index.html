@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sub Tracker</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💳</text></svg>">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&display=swap');
   
@@ -68,7 +69,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 30px;
+    margin-bottom: 24px;
     padding-bottom: 20px;
     border-bottom: 1px solid #1a1a1a;
   }
@@ -89,12 +90,28 @@
   }
   #btn-logout:hover { border-color: #555; color: #ccc; }
 
+  /* NOTIFICATION BADGES */
+  #badges {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .badge {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .badge-overdue { background: #3a1a1a; color: #ff6b6b; }
+  .badge-soon { background: #3a2a1a; color: #ffa94d; }
+  .badge-ok { background: #1a2a1a; color: #69db7c; }
+
   /* TOTALS */
   #totals {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
   }
   .total-card {
     background: #0F181E;
@@ -104,6 +121,27 @@
   }
   .total-card .label { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #666; margin-bottom: 8px; }
   .total-card .value { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; color: #fff; }
+
+  /* CATEGORY FILTER */
+  #category-filter {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .cat-btn {
+    padding: 6px 14px;
+    border-radius: 16px;
+    border: 1px solid #1a2a35;
+    background: none;
+    color: #666;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.15s;
+  }
+  .cat-btn:hover { border-color: #2a4a5a; color: #aaa; }
+  .cat-btn.active { background: #1a2a35; color: #fff; border-color: #2a4a5a; }
 
   /* ADD BUTTON */
   #btn-add {
@@ -138,22 +176,48 @@
   .sub-card {
     background: #0F181E;
     border-radius: 10px;
-    padding: 16px 18px;
+    padding: 14px 16px;
     margin-bottom: 8px;
     display: flex;
-    justify-content: space-between;
     align-items: center;
     cursor: pointer;
     transition: background 0.15s;
+    gap: 14px;
   }
   .sub-card:hover { background: #142028; }
-  .sub-left { flex: 1; }
-  .sub-name { font-weight: 500; color: #fff; font-size: 15px; }
-  .sub-detail { font-size: 12px; color: #666; margin-top: 4px; }
-  .sub-right { text-align: right; }
+  .sub-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: #1a2a35;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .sub-icon img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+  }
+  .sub-icon .fallback {
+    font-size: 16px;
+    font-weight: 600;
+    color: #4a6a7a;
+  }
+  .sub-left { flex: 1; min-width: 0; }
+  .sub-name { font-weight: 500; color: #fff; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sub-detail { font-size: 12px; color: #666; margin-top: 3px; }
+  .sub-days { font-size: 11px; margin-top: 2px; }
+  .sub-days.overdue { color: #ff6b6b; }
+  .sub-days.soon { color: #ffa94d; }
+  .sub-days.ok { color: #555; }
+  .sub-right { text-align: right; flex-shrink: 0; }
   .sub-amount { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; color: #fff; }
   .sub-cycle { font-size: 11px; color: #555; }
   .sub-unknown { color: #555; font-size: 13px; }
+  .sub-category { font-size: 10px; color: #4a6a7a; margin-top: 2px; }
 
   /* MODAL */
   #modal-overlay {
@@ -253,6 +317,8 @@
     #modal { padding: 24px 18px; }
     .total-card .value { font-size: 1.6rem; }
     header h1 { font-size: 1.6rem; }
+    .sub-icon { width: 32px; height: 32px; }
+    .sub-icon img { width: 20px; height: 20px; }
   }
 </style>
 </head>
@@ -274,6 +340,8 @@
     <button id="btn-logout" onclick="logout()">Sign Out</button>
   </header>
 
+  <div id="badges"></div>
+
   <div id="totals">
     <div class="total-card">
       <div class="label">Monthly ZAR</div>
@@ -284,6 +352,8 @@
       <div class="value" id="total-usd">$0</div>
     </div>
   </div>
+
+  <div id="category-filter"></div>
 
   <button id="btn-add" onclick="openModal()">+ Add Subscription</button>
 
@@ -329,6 +399,22 @@
         </select>
       </div>
     </div>
+    <div class="form-group">
+      <label>Category</label>
+      <select id="f-category">
+        <option value="">None</option>
+        <option value="Software">Software</option>
+        <option value="Entertainment">Entertainment</option>
+        <option value="Hosting">Hosting</option>
+        <option value="Bills">Bills</option>
+        <option value="Church">Church</option>
+        <option value="Health">Health</option>
+        <option value="Storage">Storage</option>
+        <option value="AI">AI</option>
+        <option value="Domains">Domains</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
     <div class="form-row">
       <div class="form-group">
         <label>Next Renewal</label>
@@ -358,6 +444,7 @@ const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
 let subs = [];
 let editingId = null;
 let currentUser = null;
+let activeCategory = 'All';
 
 // AUTH
 async function login() {
@@ -401,18 +488,123 @@ async function loadSubs() {
     .order('next_renewal', { ascending: true, nullsFirst: false });
   if (error) { console.error(error); return; }
   subs = data || [];
+  renderCategoryFilter();
   render();
 }
 
+// FAVICON
+function getFaviconUrl(name) {
+  const domains = {
+    'learnworlds': 'learnworlds.com',
+    'obsidian': 'obsidian.md',
+    'dust': 'dust.tt',
+    'wix': 'wix.com',
+    'dashlane': 'dashlane.com',
+    'planet fitness': 'planetfitness.com',
+    'zoom': 'zoom.us',
+    'genspark': 'genspark.ai',
+    'memoryos': 'memoryos.com',
+    'veed': 'veed.io',
+    'capcut': 'capcut.com',
+    'adobe': 'adobe.com',
+    'vimeo': 'vimeo.com',
+    'audible': 'audible.com',
+    'microsoft': 'microsoft.com',
+    'xcloud': 'xcloud.host',
+    'afrihost': 'afrihost.com',
+    'planning center': 'planningcenter.com',
+    'takealot': 'takealot.com',
+    'secura': 'secura.co.za',
+    'legalwise': 'legalwise.co.za',
+    'linkedin': 'linkedin.com',
+    'discovery': 'discovery.co.za',
+    'openart': 'openart.ai',
+    'openrouter': 'openrouter.ai',
+    'melon mobile': 'melonmobile.com',
+    'netflix': 'netflix.com',
+    'qustodio': 'qustodio.com',
+    'shibbolet': 'shibbolet.co.za',
+    'register domain': 'registerdomain.co.za',
+    'runner': 'runner.app',
+  };
+  const key = name.toLowerCase();
+  for (const [k, v] of Object.entries(domains)) {
+    if (key.includes(k)) {
+      return `https://www.google.com/s2/favicons?domain=${v}&sz=64`;
+    }
+  }
+  return null;
+}
+
+// DAYS CALC
+function daysUntil(dateStr) {
+  if (!dateStr) return null;
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const target = new Date(dateStr + 'T00:00:00');
+  const diff = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
+  return diff;
+}
+
+function daysLabel(days) {
+  if (days === null) return { text: '', cls: 'ok' };
+  if (days < 0) return { text: `${Math.abs(days)}d overdue`, cls: 'overdue' };
+  if (days === 0) return { text: 'Due today', cls: 'overdue' };
+  if (days === 1) return { text: 'Due tomorrow', cls: 'soon' };
+  if (days <= 7) return { text: `${days} days`, cls: 'soon' };
+  if (days <= 14) return { text: `${days} days`, cls: 'ok' };
+  return { text: `${days} days`, cls: 'ok' };
+}
+
+// CATEGORIES
+function renderCategoryFilter() {
+  const cats = new Set(['All']);
+  subs.forEach(s => { if (s.category) cats.add(s.category); });
+  const el = document.getElementById('category-filter');
+  el.innerHTML = Array.from(cats).map(c => 
+    `<button class="cat-btn ${c === activeCategory ? 'active' : ''}" onclick="filterCategory('${c}')">${c}</button>`
+  ).join('');
+}
+
+function filterCategory(cat) {
+  activeCategory = cat;
+  renderCategoryFilter();
+  render();
+}
+
+// BADGES
+function renderBadges() {
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const in7 = new Date(today); in7.setDate(in7.getDate() + 7);
+
+  let overdueCount = 0, soonCount = 0;
+  subs.forEach(s => {
+    if (!s.next_renewal) return;
+    const r = new Date(s.next_renewal + 'T00:00:00');
+    if (r < today) overdueCount++;
+    else if (r <= in7) soonCount++;
+  });
+
+  let html = '';
+  if (overdueCount > 0) html += `<div class="badge badge-overdue">${overdueCount} overdue</div>`;
+  if (soonCount > 0) html += `<div class="badge badge-soon">${soonCount} due this week</div>`;
+  if (overdueCount === 0 && soonCount === 0) html += `<div class="badge badge-ok">All clear</div>`;
+  document.getElementById('badges').innerHTML = html;
+}
+
+// RENDER
 function render() {
   const today = new Date();
   today.setHours(0,0,0,0);
   const in7 = new Date(today); in7.setDate(in7.getDate() + 7);
   const in14 = new Date(today); in14.setDate(in14.getDate() + 14);
 
+  const filtered = activeCategory === 'All' ? subs : subs.filter(s => s.category === activeCategory);
+
   let overdue = [], thisWeek = [], upcoming = [], active = [], bills = [];
 
-  subs.forEach(s => {
+  filtered.forEach(s => {
     const r = s.next_renewal ? new Date(s.next_renewal + 'T00:00:00') : null;
     if (s.type === 'bill') {
       if (r && r < today) { overdue.push(s); }
@@ -449,33 +641,37 @@ function render() {
     html += '<div class="section-title bills">BILLS</div>';
     bills.forEach(s => html += card(s));
   }
-  if (!subs.length) {
+  if (!filtered.length) {
     html = '<div class="empty-state">No subscriptions yet. Tap + to add one.</div>';
   }
 
   document.getElementById('sub-list').innerHTML = html;
   updateTotals();
+  renderBadges();
 }
 
 function card(s) {
   const amt = s.amount ? `${s.currency === 'USD' ? '$' : 'R'}${parseFloat(s.amount).toFixed(2)}` : '';
   const cyc = s.cycle === 'monthly' ? '/mo' : s.cycle === 'yearly' ? '/yr' : '';
-  const renewal = s.next_renewal ? formatDate(s.next_renewal) : '';
+  const days = daysUntil(s.next_renewal);
+  const dl = daysLabel(days);
+  const favicon = getFaviconUrl(s.name);
+  const iconHtml = favicon 
+    ? `<img src="${favicon}" onerror="this.parentElement.innerHTML='<span class=fallback>${s.name.charAt(0).toUpperCase()}</span>'">`
+    : `<span class="fallback">${s.name.charAt(0).toUpperCase()}</span>`;
+  const catHtml = s.category ? `<div class="sub-category">${s.category}</div>` : '';
+
   return `<div class="sub-card" onclick="openEdit('${s.id}')">
+    <div class="sub-icon">${iconHtml}</div>
     <div class="sub-left">
       <div class="sub-name">${s.name}</div>
-      <div class="sub-detail">${renewal}${s.notes ? ' · ' + s.notes : ''}</div>
+      <div class="sub-days ${dl.cls}">${dl.text}</div>
+      ${catHtml}
     </div>
     <div class="sub-right">
       ${amt ? `<div class="sub-amount">${amt}</div><div class="sub-cycle">${cyc}</div>` : '<div class="sub-unknown">—</div>'}
     </div>
   </div>`;
-}
-
-function formatDate(d) {
-  const dt = new Date(d + 'T00:00:00');
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  return `${dt.getDate()} ${months[dt.getMonth()]}`;
 }
 
 function updateTotals() {
@@ -500,6 +696,7 @@ function openModal() {
   document.getElementById('f-currency').value = 'ZAR';
   document.getElementById('f-cycle').value = 'monthly';
   document.getElementById('f-type').value = 'subscription';
+  document.getElementById('f-category').value = '';
   document.getElementById('f-renewal').value = '';
   document.getElementById('f-lastpay').value = '';
   document.getElementById('f-notes').value = '';
@@ -517,6 +714,7 @@ function openEdit(id) {
   document.getElementById('f-currency').value = s.currency || 'ZAR';
   document.getElementById('f-cycle').value = s.cycle || 'monthly';
   document.getElementById('f-type').value = s.type || 'subscription';
+  document.getElementById('f-category').value = s.category || '';
   document.getElementById('f-renewal').value = s.next_renewal || '';
   document.getElementById('f-lastpay').value = s.last_payment || '';
   document.getElementById('f-notes').value = s.notes || '';
@@ -540,6 +738,7 @@ async function saveSub() {
     currency: document.getElementById('f-currency').value,
     cycle: document.getElementById('f-cycle').value,
     type: document.getElementById('f-type').value,
+    category: document.getElementById('f-category').value || null,
     next_renewal: document.getElementById('f-renewal').value || null,
     last_payment: document.getElementById('f-lastpay').value || null,
     notes: document.getElementById('f-notes').value.trim(),
