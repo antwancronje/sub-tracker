@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Sub Tracker</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💳</text></svg>">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&display=swap');
+  
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    background: #080808;
+    color: #e0e0e0;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    min-height: 100vh;
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* LOGIN */
+  #login-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  #login-screen h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3rem;
+    letter-spacing: 4px;
+    margin-bottom: 40px;
+    color: #fff;
+  }
+  #login-screen input {
+    width: 320px;
+    padding: 16px 18px;
+    margin-bottom: 16px;
+    background: #0F181E;
+    border: 1px solid #1a2a35;
+    border-radius: 10px;
+    color: #e0e0e0;
+    font-size: 17px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+  }
+  #login-screen input:focus { border-color: #2a4a5a; }
+  #login-screen button {
+    width: 320px;
+    padding: 16px;
+    background: #1a2a35;
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-size: 17px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+  #login-screen button:hover { background: #2a4a5a; }
+  #login-error { color: #ff6b6b; margin-top: 12px; font-size: 15px; }
+
+  /* APP */
+  #app { display: none; max-width: 700px; margin: 0 auto; padding: 20px 16px; }
+  
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #1a1a1a;
+  }
+  header h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.2rem;
+    letter-spacing: 3px;
+    color: #fff;
+  }
+  #btn-logout {
+    background: none;
+    border: 1px solid #333;
+    color: #bbb;
+    padding: 10px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  #btn-logout:hover { border-color: #555; color: #fff; }
+
+  /* MONTHLY TOTALS */
+  #totals-row {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-bottom: 20px;
+    padding: 10px 0;
+  }
+  .total-inline {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.6rem;
+    color: #fff;
+    letter-spacing: 1px;
+  }
+  .total-inline .label {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-right: 6px;
+  }
+
+  /* STATUS CARDS */
+  #status-cards, #task-status-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .status-card {
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .status-card:hover { transform: scale(1.02); }
+  .status-card .count {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.8rem;
+    color: #fff;
+    line-height: 1;
+  }
+  .status-card .status-label {
+    font-size: 13px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-top: 6px;
+  }
+  .status-overdue { background: #2a1010; }
+  .status-overdue .status-label { color: #ff6b6b; }
+  .status-soon { background: #2a2010; }
+  .status-soon .status-label { color: #ffa94d; }
+  .status-open { background: #0F181E; }
+  .status-open .status-label { color: #74c0fc; }
+  .status-open.active-filter { outline: 2px solid #74c0fc; outline-offset: -2px; }
+  .status-overdue.active-filter { outline: 2px solid #ff6b6b; outline-offset: -2px; }
+
+  /* STATUS DETAIL PANEL */
+  #status-detail {
+    display: none;
+    margin-bottom: 20px;
+    background: #0F181E;
+    border-radius: 12px;
+    padding: 16px;
+  }
+  #status-detail.show { display: block; }
+  #status-detail-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.2rem;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+    color: #fff;
+  }
+  .status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #1a2a35;
+  }
+  .status-item:last-child { border-bottom: none; }
+  .status-item-name { color: #fff; font-size: 16px; font-weight: 500; }
+  .status-item-info { text-align: right; }
+  .status-item-amount { color: #fff; font-size: 16px; font-weight: 500; }
+  .status-item-days { font-size: 13px; margin-top: 2px; }
+  .status-item-days.overdue { color: #ff6b6b; }
+  .status-item-days.soon { color: #ffa94d; }
+
+  /* CATEGORY / FILTER PILLS — shared style */
+  .filter-pills {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .cat-btn {
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 1px solid #1a2a35;
+    background: none;
+    color: #bbb;
+    font-size: 14px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.15s;
+  }
+  .cat-btn:hover:hover { border-color: #2a4a5a; color: #fff; }
+  .cat-btn.active.active { background: #1a2a35; color: #fff; border-color: #2a4a5a; }
+
+  /* ADD BUTTON */
+  .btn-add {
+    width: 100%;
+    padding: 18px;
+    background: #0F181E;
+    border: 2px dashed #1a2a35;
+    border-radius: 12px;
+    color: #999;
+    font-size: 17px;
+    cursor: pointer;
+    margin-bottom: 24px;
+    transition: all 0.2s;
+  }
+  .btn-add:hover { border-color: #2a4a5a; color: #fff; }
+
+  /* SECTIONS */
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.3rem;
+    letter-spacing: 2px;
+    color: #ff6b6b;
+    margin: 24px 0 14px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #1a1a1a;
+  }
+  .section-title.upcoming { color: #ffa94d; }
+  .section-title.active { color: #69db7c; }
+  .section-title.bills { color: #74c0fc; }
+
+  /* SUBSCRIPTION CARD */
+  .sub-card {
+    background: #0F181E;
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.15s;
+    gap: 14px;
+  }
+  .sub-card:hover { background: #142028; }
+  .sub-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: #1a2a35;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .sub-icon img { width: 28px; height: 28px; object-fit: contain; }
+  .sub-icon .fallback { font-size: 18px; font-weight: 600; color: #7a9aaa; }
+  .sub-left { flex: 1; min-width: 0; }
+  .sub-name { font-weight: 500; color: #fff; font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sub-detail { font-size: 14px; color: #999; margin-top: 4px; }
+  .sub-days { font-size: 13px; margin-top: 3px; font-weight: 500; }
+  .sub-days.overdue { color: #ff6b6b; }
+  .sub-days.soon { color: #ffa94d; }
+  .sub-days.ok { color: #888; }
+  .sub-right { text-align: right; flex-shrink: 0; }
+  .sub-amount { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; color: #fff; }
+  .sub-cycle { font-size: 13px; color: #999; }
+  .sub-unknown { color: #888; font-size: 16px; }
+  .sub-category { font-size: 12px; color: #7a9aaa; margin-top: 3px; }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-box {
+    background: #0F181E;
+    border-radius: 16px;
+    padding: 30px 24px;
+    width: 100%;
+    max-width: 440px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal-box h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.6rem;
+    letter-spacing: 2px;
+    color: #fff;
+    margin-bottom: 24px;
+  }
+  .form-group { margin-bottom: 18px; }
+  .form-group label {
+    display: block;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #999;
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%;
+    padding: 14px 16px;
+    background: #080808;
+    border: 1px solid #1a2a35;
+    border-radius: 10px;
+    color: #e0e0e0;
+    font-size: 17px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+  }
+  .form-group textarea { resize: vertical; min-height: 80px; }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #2a4a5a; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  
+  .btn-save {
+    width: 100%;
+    padding: 16px;
+    background: #1a2a35;
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-size: 17px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  .btn-save:hover { background: #2a4a5a; }
+  .btn-delete {
+    width: 100%;
+    padding: 14px;
+    background: none;
+    border: 1px solid #3a1a1a;
+    border-radius: 10px;
+    color: #ff6b6b;
+    font-size: 15px;
+    cursor: pointer;
+    margin-top: 12px;
+  }
+  .btn-delete:hover { background: #2a1010; }
+  .btn-cancel {
+    width: 100%;
+    padding: 14px;
+    background: none;
+    border: none;
+    color: #999;
+    font-size: 15px;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #666;
+    font-size: 17px;
+  }
+
+  /* TABS */
+  .tab-bar {
+    display: flex;
+    gap: 0;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #1a1a1a;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 14px 0;
+    text-align: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.2rem;
+    letter-spacing: 2px;
+    color: #666;
+    cursor: pointer;
+    border: none;
+    background: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.15s;
+  }
+  .tab-btn:hover { color: #bbb; }
+  .tab-btn.active { color: #fff; border-bottom-color: #3b82f6; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* TASK COLLAPSIBLE GROUPS */
+  .task-group { margin-bottom: 8px; }
+  .task-group-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: #0c1218;
+    border-radius: 10px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+    margin-bottom: 4px;
+  }
+  .task-group-header:hover { background: #111a22; }
+  .task-group-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+  }
+  .task-group-label.overdue { color: #ff6b6b; }
+  .task-group-label.today { color: #ffa94d; }
+  .task-group-label.this-week { color: #74c0fc; }
+  .task-group-label.next-week { color: #a78bfa; }
+  .task-group-label.upcoming-g { color: #69db7c; }
+  .task-group-label.no-date { color: #888; }
+  .task-group-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .task-group-count {
+    font-size: 13px;
+    color: #888;
+  }
+  .task-group-chevron {
+    font-size: 12px;
+    color: #666;
+    transition: transform 0.2s;
+  }
+  .task-group-chevron.open { transform: rotate(180deg); }
+  .task-group-items {
+    overflow: hidden;
+    transition: max-height 0.25s ease;
+  }
+  .task-group-items.collapsed { max-height: 0 !important; }
+
+  /* TASK CARD */
+  .task-card {
+    background: #0F181E;
+    border: 1px solid #1a2a35;
+    border-left: 3px solid transparent;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .task-card:hover { border-color: #2a4a5a; }
+  .task-card.overdue-card { border-left-color: #dc2626; }
+  .task-check {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    border: 2px solid #1a2a35;
+    border-radius: 50%;
+    margin-top: 1px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  .task-check:hover { border-color: #3b82f6; background: rgba(59,130,246,0.1); }
+  .task-check.checked { background: #3b82f6; border-color: #3b82f6; }
+  .task-check.checked::after { content: '\2713'; color: #fff; font-size: 13px; font-weight: 600; }
+  .task-content { flex: 1; min-width: 0; }
+  .task-title { font-size: 15px; font-weight: 500; color: #fff; margin-bottom: 4px; }
+  .task-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .task-date { font-size: 12px; color: #888; }
+  .task-date.overdue { color: #dc2626; font-weight: 500; }
+  .task-notes-preview { font-size: 12px; color: #666; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .priority-dot { width: 8px; height: 8px; min-width: 8px; border-radius: 50%; }
+  .priority-dot.high { background: #ff6b6b; }
+  .priority-dot.medium { background: #ffa94d; }
+  .priority-dot.low { background: #74c0fc; }
+
+  .empty-tasks {
+    text-align: center;
+    padding: 60px 20px;
+    color: #666;
+  }
+  .empty-tasks h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    color: #555;
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+  }
+  .empty-tasks p { font-size: 15px; }
+
+  @media (max-width: 500px) {
+    body { font-size: 17px; }
+    .modal-box { padding: 24px 18px; }
+    header h1 { font-size: 1.8rem; }
+    .sub-name { font-size: 16px; }
+    .sub-amount { font-size: 1.5rem; }
+    .status-card .count { font-size: 2.6rem; }
+    .status-card { padding: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <h1>SUB TRACKER</h1>
+  <input type="email" id="login-email" placeholder="Email">
+  <input type="password" id="login-password" placeholder="Password">
+  <button onclick="doLogin()">Sign In</button>
+  <div id="login-error"></div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <header>
+    <h1 id="app-title">SUB TRACKER</h1>
+    <button id="btn-logout" onclick="doLogout()">Sign Out</button>
+  </header>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('subs',this)">Subscriptions</button>
+    <button class="tab-btn" onclick="switchTab('tasks',this)">Tasks</button>
+  </div>
+
+  <!-- SUBSCRIPTIONS TAB -->
+  <div class="tab-content active" id="tab-subs">
+    <div id="totals-row">
+      <div class="total-inline"><span class="label">ZAR</span> <span id="total-zar">R0</span></div>
+      <div class="total-inline"><span class="label">USD</span> <span id="total-usd">$0</span></div>
+    </div>
+    <div id="status-cards">
+      <div class="status-card status-overdue" onclick="toggleStatusDetail('overdue')">
+        <div class="count" id="overdue-count">0</div>
+        <div class="status-label">Overdue</div>
+      </div>
+      <div class="status-card status-soon" onclick="toggleStatusDetail('soon')">
+        <div class="count" id="soon-count">0</div>
+        <div class="status-label">Due This Week</div>
+      </div>
+    </div>
+    <div id="status-detail">
+      <div id="status-detail-title"></div>
+      <div id="status-detail-list"></div>
+    </div>
+    <div id="category-filter" class="filter-pills"></div>
+    <button class="btn-add" onclick="openModal()">+ Add Subscription</button>
+    <div id="sub-list"></div>
+  </div>
+
+  <!-- TASKS TAB -->
+  <div class="tab-content" id="tab-tasks">
+    <div id="task-status-cards">
+      <div class="status-card status-open" id="task-card-open" onclick="toggleTaskStatusFilter('open')">
+        <div class="count" id="task-open-count">0</div>
+        <div class="status-label">Open</div>
+      </div>
+      <div class="status-card status-overdue" id="task-card-overdue" onclick="toggleTaskStatusFilter('overdue')">
+        <div class="count" id="task-overdue-count">0</div>
+        <div class="status-label">Overdue</div>
+      </div>
+    </div>
+    <button class="btn-add" onclick="openTM()">+ Add Task</button>
+    <div id="task-container"></div>
+  </div>
+</div>
+
+<!-- SUBSCRIPTION MODAL -->
+<div id="modal-overlay" class="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <h2 id="modal-title">ADD SUBSCRIPTION</h2>
+    <div class="form-group"><label>Name</label><input type="text" id="f-name" placeholder="e.g. Netflix"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Amount</label><input type="number" id="f-amount" placeholder="0.00" step="0.01"></div>
+      <div class="form-group"><label>Currency</label><select id="f-currency"><option value="ZAR">ZAR (R)</option><option value="USD">USD ($)</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Cycle</label><select id="f-cycle"><option value="monthly">Monthly</option><option value="yearly">Yearly</option><option value="once-off">Once-off</option><option value="as-needed">As needed</option></select></div>
+      <div class="form-group"><label>Type</label><select id="f-type"><option value="subscription">Subscription</option><option value="bill">Bill</option></select></div>
+    </div>
+    <div class="form-group"><label>Category</label><select id="f-category"><option value="">None</option><option value="Software">Software</option><option value="Entertainment">Entertainment</option><option value="Hosting">Hosting</option><option value="Internet">Internet</option><option value="Apps">Apps</option><option value="Bills">Bills</option><option value="Church">Church</option><option value="AI">AI</option><option value="Domains">Domains</option><option value="Other">Other</option></select></div>
+    <div class="form-row">
+      <div class="form-group"><label>Next Renewal</label><input type="date" id="f-renewal"></div>
+      <div class="form-group"><label>Last Payment</label><input type="date" id="f-lastpay"></div>
+    </div>
+    <div class="form-group"><label>Notes</label><input type="text" id="f-notes" placeholder="Optional notes"></div>
+    <button class="btn-save" onclick="saveSub()">Save</button>
+    <button class="btn-delete" id="btn-delete" onclick="deleteSub()" style="display:none;">Delete</button>
+    <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+  </div>
+</div>
+
+<!-- TASK MODAL -->
+<div id="tm-overlay" class="modal-overlay" onclick="if(event.target===this)closeTM()">
+  <div class="modal-box">
+    <h2 id="tm-title">ADD TASK</h2>
+    <div class="form-group"><label>Title</label><input type="text" id="t-title" placeholder="What needs to be done?"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Due Date</label><input type="date" id="t-due"></div>
+      <div class="form-group"><label>Priority</label><select id="t-priority"><option value="high">High</option><option value="medium" selected>Medium</option><option value="low">Low</option></select></div>
+    </div>
+    <div class="form-group"><label>Notes</label><textarea id="t-notes" placeholder="Optional notes..."></textarea></div>
+    <button class="btn-save" onclick="saveT()">Save</button>
+    <button class="btn-delete" id="tm-btn-del" onclick="delT()" style="display:none;">Delete</button>
+    <button class="btn-cancel" onclick="closeTM()">Cancel</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const SUPA_URL = 'https://guiacshwxuyvojtgnynf.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1aWFjc2h3eHV5dm9qdGdueW5mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NDQ1MTMsImV4cCI6MjA4ODEyMDUxM30.73JPhyIehnk0hOczkwiP9UH6Yld_eVJYsgnDNcZjWr4';
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+let subs = [];
+let editingId = null;
+let currentUser = null;
+let activeCategory = 'All';
+let activeStatusPanel = null;
+
+// ==================== AUTH ====================
+async function doLogin() {
+  const email = document.getElementById('login-email').value;
+  const pw = document.getElementById('login-password').value;
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
+  if (error) { document.getElementById('login-error').textContent = error.message; return; }
+  currentUser = data.user;
+  showApp();
+}
+
+async function doLogout() {
+  await sb.auth.signOut();
+  currentUser = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+async function checkSession() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) { currentUser = session.user; showApp(); }
+}
+
+async function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  await loadSubs();
+  await loadTasks();
+}
+
+// ==================== TABS ====================
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('app-title').textContent = tab === 'subs' ? 'SUB TRACKER' : 'TASK TRACKER';
+}
+
+// ==================== SUBSCRIPTIONS ====================
+async function loadSubs() {
+  const { data, error } = await sb.from('subscriptions').select('*').eq('status', 'active').order('next_renewal', { ascending: true, nullsFirst: false });
+  if (error) { console.error(error); return; }
+  subs = data || [];
+  renderCategoryFilter();
+  render();
+}
+
+function getFaviconUrl(name) {
+  const domains = {
+    'learnworlds':'learnworlds.com','obsidian':'obsidian.md','dust':'dust.tt','wix':'wix.com','dashlane':'dashlane.com',
+    'planet fitness':'planetfitness.com','zoom':'zoom.us','genspark':'genspark.ai','memoryos':'memoryos.com',
+    'veed':'veed.io','capcut':'capcut.com','adobe':'adobe.com','vimeo':'vimeo.com','audible':'audible.com',
+    'microsoft':'microsoft.com','xcloud':'xcloud.host','afrihost':'afrihost.com','planning center':'planningcenter.com',
+    'takealot':'takealot.com','secura':'secura.co.za','legalwise':'legalwise.co.za','linkedin':'linkedin.com',
+    'discovery':'discovery.co.za','openart':'openart.ai','openrouter':'openrouter.ai','melon mobile':'melonmobile.com',
+    'netflix':'netflix.com','qustodio':'qustodio.com','shibbolet':'shibbolet.co.za','register domain':'registerdomain.co.za',
+    'runner':'runner.app','jpflorida':'jpflorida.org','jpdallas':'jpdallas.org',
+  };
+  const key = name.toLowerCase();
+  for (const [k, v] of Object.entries(domains)) { if (key.includes(k)) return `https://www.google.com/s2/favicons?domain=${v}&sz=64`; }
+  return null;
+}
+
+function daysUntil(dateStr) {
+  if (!dateStr) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const target = new Date(dateStr + 'T00:00:00');
+  return Math.ceil((target - today) / 86400000);
+}
+
+function daysLabel(days) {
+  if (days === null) return { text: '', cls: 'ok' };
+  if (days < 0) return { text: Math.abs(days) + 'd overdue', cls: 'overdue' };
+  if (days === 0) return { text: 'Due today', cls: 'overdue' };
+  if (days === 1) return { text: 'Due tomorrow', cls: 'soon' };
+  if (days <= 7) return { text: days + ' days', cls: 'soon' };
+  return { text: days + ' days', cls: 'ok' };
+}
+
+function renderCategoryFilter() {
+  const cats = new Set(['All']);
+  subs.forEach(s => { if (s.category) cats.add(s.category); });
+  document.getElementById('category-filter').innerHTML = Array.from(cats).map(c =>
+    '<button class="cat-btn ' + (c === activeCategory ? 'active' : '') + '" onclick="filterCategory(\'' + c + '\')">' + c + '</button>'
+  ).join('');
+}
+
+function filterCategory(cat) { activeCategory = cat; renderCategoryFilter(); render(); }
+
+function getStatusGroups() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const in7 = new Date(today); in7.setDate(in7.getDate() + 7);
+  let overdue = [], soon = [];
+  subs.forEach(s => {
+    if (!s.next_renewal) return;
+    const r = new Date(s.next_renewal + 'T00:00:00');
+    if (r < today) overdue.push(s);
+    else if (r <= in7) soon.push(s);
+  });
+  return { overdue, soon };
+}
+
+function renderStatusCards() {
+  const { overdue, soon } = getStatusGroups();
+  document.getElementById('overdue-count').textContent = overdue.length;
+  document.getElementById('soon-count').textContent = soon.length;
+}
+
+function toggleStatusDetail(type) {
+  const panel = document.getElementById('status-detail');
+  if (activeStatusPanel === type) { panel.classList.remove('show'); activeStatusPanel = null; return; }
+  activeStatusPanel = type;
+  const { overdue, soon } = getStatusGroups();
+  const items = type === 'overdue' ? overdue : soon;
+  document.getElementById('status-detail-title').textContent = type === 'overdue' ? 'OVERDUE' : 'DUE THIS WEEK';
+  let html = '';
+  if (!items.length) { html = '<div style="padding:10px 0;color:#888;font-size:15px;">None</div>'; }
+  else { items.forEach(s => {
+    const amt = s.amount ? (s.currency === 'USD' ? '$' : 'R') + parseFloat(s.amount).toFixed(2) : '—';
+    const dl = daysLabel(daysUntil(s.next_renewal));
+    html += '<div class="status-item"><div class="status-item-name">' + s.name + '</div><div class="status-item-info"><div class="status-item-amount">' + amt + '</div><div class="status-item-days ' + dl.cls + '">' + dl.text + '</div></div></div>';
+  }); }
+  document.getElementById('status-detail-list').innerHTML = html;
+  panel.classList.add('show');
+}
+
+function render() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const in7 = new Date(today); in7.setDate(in7.getDate() + 7);
+  const in14 = new Date(today); in14.setDate(in14.getDate() + 14);
+  const filtered = activeCategory === 'All' ? subs : subs.filter(s => s.category === activeCategory);
+  let overdue = [], thisWeek = [], upcoming = [], active = [], bills = [];
+  filtered.forEach(s => {
+    const r = s.next_renewal ? new Date(s.next_renewal + 'T00:00:00') : null;
+    if (s.type === 'bill') { if (r && r < today) overdue.push(s); else bills.push(s); }
+    else if (r && r < today) overdue.push(s);
+    else if (r && r <= in7) thisWeek.push(s);
+    else if (r && r <= in14) upcoming.push(s);
+    else active.push(s);
+  });
+  let html = '';
+  if (overdue.length) { html += '<div class="section-title">OVERDUE</div>'; overdue.forEach(s => html += subCard(s)); }
+  if (thisWeek.length) { html += '<div class="section-title upcoming">DUE THIS WEEK</div>'; thisWeek.forEach(s => html += subCard(s)); }
+  if (upcoming.length) { html += '<div class="section-title upcoming">DUE NEXT 14 DAYS</div>'; upcoming.forEach(s => html += subCard(s)); }
+  if (active.length) { html += '<div class="section-title active">SUBSCRIPTIONS</div>'; active.forEach(s => html += subCard(s)); }
+  if (bills.length) { html += '<div class="section-title bills">BILLS</div>'; bills.forEach(s => html += subCard(s)); }
+  if (!filtered.length) html = '<div class="empty-state">No subscriptions yet. Tap + to add one.</div>';
+  document.getElementById('sub-list').innerHTML = html;
+  updateTotals();
+  renderStatusCards();
+}
+
+function subCard(s) {
+  const amt = s.amount ? (s.currency === 'USD' ? '$' : 'R') + parseFloat(s.amount).toFixed(2) : '';
+  const cyc = s.cycle === 'monthly' ? '/mo' : s.cycle === 'yearly' ? '/yr' : '';
+  const dl = daysLabel(daysUntil(s.next_renewal));
+  const favicon = getFaviconUrl(s.name);
+  const iconHtml = favicon
+    ? '<img src="' + favicon + '" onerror="this.parentElement.innerHTML=\'<span class=fallback>' + s.name.charAt(0).toUpperCase() + '</span>\'">'
+    : '<span class="fallback">' + s.name.charAt(0).toUpperCase() + '</span>';
+  const catHtml = s.category ? '<div class="sub-category">' + s.category + '</div>' : '';
+  return '<div class="sub-card" onclick="openEdit(\'' + s.id + '\')">' +
+    '<div class="sub-icon">' + iconHtml + '</div>' +
+    '<div class="sub-left"><div class="sub-name">' + s.name + '</div><div class="sub-days ' + dl.cls + '">' + dl.text + '</div>' + catHtml + '</div>' +
+    '<div class="sub-right">' + (amt ? '<div class="sub-amount">' + amt + '</div><div class="sub-cycle">' + cyc + '</div>' : '<div class="sub-unknown">—</div>') + '</div></div>';
+}
+
+function updateTotals() {
+  let zar = 0, usd = 0;
+  subs.forEach(s => {
+    if (!s.amount) return;
+    const amt = parseFloat(s.amount);
+    const monthly = s.cycle === 'yearly' ? amt / 12 : s.cycle === 'monthly' ? amt : 0;
+    if (s.currency === 'ZAR') zar += monthly;
+    else if (s.currency === 'USD') usd += monthly;
+  });
+  document.getElementById('total-zar').textContent = 'R' + Math.round(zar);
+  document.getElementById('total-usd').textContent = '$' + Math.round(usd);
+}
+
+// SUB MODAL
+function openModal() {
+  editingId = null;
+  document.getElementById('modal-title').textContent = 'ADD SUBSCRIPTION';
+  ['f-name','f-notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-amount').value = '';
+  document.getElementById('f-currency').value = 'ZAR';
+  document.getElementById('f-cycle').value = 'monthly';
+  document.getElementById('f-type').value = 'subscription';
+  document.getElementById('f-category').value = '';
+  document.getElementById('f-renewal').value = '';
+  document.getElementById('f-lastpay').value = '';
+  document.getElementById('btn-delete').style.display = 'none';
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+function openEdit(id) {
+  const s = subs.find(x => x.id === id);
+  if (!s) return;
+  editingId = id;
+  document.getElementById('modal-title').textContent = 'EDIT SUBSCRIPTION';
+  document.getElementById('f-name').value = s.name;
+  document.getElementById('f-amount').value = s.amount || '';
+  document.getElementById('f-currency').value = s.currency || 'ZAR';
+  document.getElementById('f-cycle').value = s.cycle || 'monthly';
+  document.getElementById('f-type').value = s.type || 'subscription';
+  document.getElementById('f-category').value = s.category || '';
+  document.getElementById('f-renewal').value = s.next_renewal || '';
+  document.getElementById('f-lastpay').value = s.last_payment || '';
+  document.getElementById('f-notes').value = s.notes || '';
+  document.getElementById('btn-delete').style.display = 'block';
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+function closeModal() { document.getElementById('modal-overlay').classList.remove('show'); editingId = null; }
+
+async function saveSub() {
+  const obj = {
+    name: document.getElementById('f-name').value.trim(),
+    amount: document.getElementById('f-amount').value ? parseFloat(document.getElementById('f-amount').value) : null,
+    currency: document.getElementById('f-currency').value,
+    cycle: document.getElementById('f-cycle').value,
+    type: document.getElementById('f-type').value,
+    category: document.getElementById('f-category').value || null,
+    next_renewal: document.getElementById('f-renewal').value || null,
+    last_payment: document.getElementById('f-lastpay').value || null,
+    notes: document.getElementById('f-notes').value.trim(),
+    status: 'active',
+    user_id: currentUser.id
+  };
+  if (!obj.name) return;
+  let error;
+  if (editingId) { ({ error } = await sb.from('subscriptions').update(obj).eq('id', editingId)); }
+  else { ({ error } = await sb.from('subscriptions').insert(obj)); }
+  if (error) { console.error(error); alert('Error: ' + error.message); return; }
+  closeModal();
+  await loadSubs();
+}
+
+async function deleteSub() {
+  if (!editingId || !confirm('Delete this subscription?')) return;
+  const { error } = await sb.from('subscriptions').delete().eq('id', editingId);
+  if (error) { console.error(error); return; }
+  closeModal();
+  await loadSubs();
+}
+
+// ==================== TASKS ====================
+let _tasks = [], _editTid = null, _tStatusFilter = 'open';
+let _collapsedGroups = {};
+
+async function loadTasks() {
+  const { data, error } = await sb.from('tasks').select('*').order('created_at', { ascending: false });
+  if (error) { console.error(error); return; }
+  _tasks = data || [];
+  renderT();
+}
+
+
+
+function toggleTaskStatusFilter(type) {
+  if (_tStatusFilter === type) { _tStatusFilter = 'open'; }
+  else { _tStatusFilter = type; }
+  renderT();
+}
+
+function _tDateKey(ds) {
+  if (!ds) return 'no-date';
+  const d = new Date(ds + 'T00:00:00');
+  const now = new Date(); now.setHours(0,0,0,0);
+  const diff = Math.round((d - now) / 86400000);
+  if (diff < 0) return 'overdue';
+  if (diff === 0) return 'today';
+  const dayOfWeek = now.getDay(); // 0=Sun
+  const daysToEndOfWeek = 7 - dayOfWeek;
+  if (diff <= daysToEndOfWeek) return 'this-week';
+  if (diff <= daysToEndOfWeek + 7) return 'next-week';
+  return 'upcoming';
+}
+
+function _tDateDisplay(ds) {
+  if (!ds) return '';
+  const d = new Date(ds + 'T00:00:00');
+  const now = new Date(); now.setHours(0,0,0,0);
+  const diff = Math.round((d - now) / 86400000);
+  if (diff < -1) return Math.abs(diff) + 'd overdue';
+  if (diff === -1) return 'Yesterday';
+  if (diff === 0) return 'Today';
+  if (diff === 1) return 'Tomorrow';
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return d.getDate() + ' ' + months[d.getMonth()];
+}
+
+function toggleGroup(key) {
+  _collapsedGroups[key] = !_collapsedGroups[key];
+  const items = document.getElementById('tg-items-' + key);
+  const chevron = document.getElementById('tg-chev-' + key);
+  if (_collapsedGroups[key]) { items.classList.add('collapsed'); chevron.classList.remove('open'); }
+  else { items.classList.remove('collapsed'); chevron.classList.add('open'); }
+}
+
+function renderT() {
+  // Update stat cards
+  const openCount = _tasks.filter(t => t.status !== 'done').length;
+  const overdueTaskCount = _tasks.filter(t => t.status !== 'done' && t.due_date && _tDateKey(t.due_date) === 'overdue').length;
+  document.getElementById('task-open-count').textContent = openCount;
+  document.getElementById('task-overdue-count').textContent = overdueTaskCount;
+
+  // Active filter highlight
+  document.getElementById('task-card-open').classList.toggle('active-filter', _tStatusFilter === 'open');
+  document.getElementById('task-card-overdue').classList.toggle('active-filter', _tStatusFilter === 'overdue');
+  document.getElementById('task-card-open').classList.toggle('active-filter', _tStatusFilter === 'open');
+
+  // Filter tasks
+  let filtered = _tasks.filter(t => {
+    if (_tStatusFilter === 'open') return t.status !== 'done';
+    if (_tStatusFilter === 'overdue') return t.status !== 'done' && t.due_date && _tDateKey(t.due_date) === 'overdue';
+    return true;
+  });
+
+
+
+  if (!filtered.length) {
+    const msg = _tStatusFilter === 'overdue' ? 'No overdue tasks.' : 'All clear.';
+    document.getElementById('task-container').innerHTML = '<div class="empty-tasks"><h3>' + (_tStatusFilter === 'overdue' ? 'ALL GOOD' : 'ALL CLEAR') + '</h3><p>' + msg + '</p></div>';
+    return;
+  }
+
+  // Group tasks
+  const groupOrder = [
+        { key: 'overdue', label: 'OVERDUE', cls: 'overdue' },
+        { key: 'today', label: 'TODAY', cls: 'today' },
+        { key: 'this-week', label: 'THIS WEEK', cls: 'this-week' },
+        { key: 'next-week', label: 'NEXT WEEK', cls: 'next-week' },
+        { key: 'upcoming', label: 'UPCOMING', cls: 'upcoming-g' },
+        { key: 'no-date', label: 'NO DATE', cls: 'no-date' }
+      ];
+
+  const groups = {};
+  filtered.forEach(t => {
+    const k = _tDateKey(t.due_date);
+    if (!groups[k]) groups[k] = [];
+    groups[k].push(t);
+  });
+
+  // Sort within groups: high > medium > low, then by due date
+  const prioVal = { high: 0, medium: 1, low: 2 };
+  Object.values(groups).forEach(arr => arr.sort((a, b) => {
+    const pa = prioVal[a.priority] ?? 1, pb = prioVal[b.priority] ?? 1;
+    if (pa !== pb) return pa - pb;
+    if (a.due_date && b.due_date) return a.due_date.localeCompare(b.due_date);
+    if (a.due_date) return -1;
+    if (b.due_date) return 1;
+    return 0;
+  }));
+
+  let html = '';
+  groupOrder.forEach(g => {
+    const items = groups[g.key];
+    if (!items || !items.length) return;
+    const isCollapsed = _collapsedGroups[g.key] || false;
+    html += '<div class="task-group">';
+    html += '<div class="task-group-header" onclick="toggleGroup(\'' + g.key + '\')">';
+    html += '<span class="task-group-label ' + g.cls + '">' + g.label + '</span>';
+    html += '<div class="task-group-meta"><span class="task-group-count">' + items.length + '</span>';
+    html += '<span class="task-group-chevron ' + (isCollapsed ? '' : 'open') + '" id="tg-chev-' + g.key + '">▼</span></div></div>';
+    html += '<div class="task-group-items ' + (isCollapsed ? 'collapsed' : '') + '" id="tg-items-' + g.key + '" style="max-height:' + (isCollapsed ? '0' : (items.length * 100)) + 'px">';
+    items.forEach(t => html += taskCard(t));
+    html += '</div></div>';
+  });
+
+  document.getElementById('task-container').innerHTML = html;
+}
+
+function taskCard(t) {
+  const isDone = t.status === 'done';
+  const isOverdue = !isDone && t.due_date && _tDateKey(t.due_date) === 'overdue';
+  const dateDisp = _tDateDisplay(t.due_date);
+  const dateCls = isOverdue ? 'overdue' : '';
+  const cardCls = isOverdue ? ' overdue-card' : '';
+
+  let html = '<div class="task-card' + cardCls + '" onclick="openTEdit(\'' + t.id + '\')">';
+  html += '<div class="task-check ' + (isDone ? 'checked' : '') + '" onclick="event.stopPropagation();toggleTC(\'' + t.id + '\')"></div>';
+  html += '<div class="task-content">';
+  html += '<div class="task-title"' + (isDone ? ' style="text-decoration:line-through;opacity:0.5"' : '') + '>' + t.title + '</div>';
+  html += '<div class="task-meta">';
+  if (t.priority) html += '<span class="priority-dot ' + t.priority + '"></span>';
+  if (dateDisp) html += '<span class="task-date ' + dateCls + '">' + dateDisp + '</span>';
+  html += '</div>';
+  if (t.notes && !isDone) html += '<div class="task-notes-preview">' + t.notes + '</div>';
+  html += '</div></div>';
+  return html;
+}
+
+async function toggleTC(id) {
+  const t = _tasks.find(x => x.id === id);
+  if (!t) return;
+  const newStatus = t.status === 'done' ? 'open' : 'done';
+  const updates = { status: newStatus };
+  if (newStatus === 'done') updates.completed_at = new Date().toISOString();
+  else updates.completed_at = null;
+  const { error } = await sb.from('tasks').update(updates).eq('id', id);
+  if (error) { console.error(error); return; }
+  t.status = newStatus;
+  t.completed_at = updates.completed_at;
+  renderT();
+}
+
+// TASK MODAL
+function openTM() {
+  _editTid = null;
+  document.getElementById('tm-title').textContent = 'ADD TASK';
+  document.getElementById('t-title').value = '';
+  document.getElementById('t-due').value = '';
+  document.getElementById('t-priority').value = 'medium';
+  document.getElementById('t-notes').value = '';
+  document.getElementById('tm-btn-del').style.display = 'none';
+  document.getElementById('tm-overlay').classList.add('show');
+}
+
+function openTEdit(id) {
+  const t = _tasks.find(x => x.id === id);
+  if (!t) return;
+  _editTid = id;
+  document.getElementById('tm-title').textContent = 'EDIT TASK';
+  document.getElementById('t-title').value = t.title || '';
+  document.getElementById('t-due').value = t.due_date || '';
+  document.getElementById('t-priority').value = t.priority || 'medium';
+  document.getElementById('t-notes').value = t.notes || '';
+  document.getElementById('tm-btn-del').style.display = 'block';
+  document.getElementById('tm-overlay').classList.add('show');
+}
+
+function closeTM() { document.getElementById('tm-overlay').classList.remove('show'); _editTid = null; }
+
+async function saveT() {
+  const obj = {
+    title: document.getElementById('t-title').value.trim(),
+    due_date: document.getElementById('t-due').value || null,
+    priority: document.getElementById('t-priority').value,
+    notes: document.getElementById('t-notes').value.trim() || null,
+    user_id: currentUser.id
+  };
+  if (!obj.title) return;
+  let error;
+  if (_editTid) {
+    ({ error } = await sb.from('tasks').update(obj).eq('id', _editTid));
+  } else {
+    obj.status = 'open';
+    ({ error } = await sb.from('tasks').insert(obj));
+  }
+  if (error) { console.error(error); alert('Error: ' + error.message); return; }
+  closeTM();
+  await loadTasks();
+}
+
+async function delT() {
+  if (!_editTid || !confirm('Delete this task?')) return;
+  const { error } = await sb.from('tasks').delete().eq('id', _editTid);
+  if (error) { console.error(error); return; }
+  closeTM();
+  await loadTasks();
+}
+
+// ==================== INIT ====================
+checkSession();
+</script>
+</body>
+</html>
