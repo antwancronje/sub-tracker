@@ -5,635 +5,826 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Sub Tracker</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💳</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&display=swap');
-  
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  
-  body {
-    background: #080808;
-    color: #e0e0e0;
-    font-family: 'Inter', sans-serif;
-    font-weight: 400;
-    min-height: 100vh;
-    font-size: 16px;
-    -webkit-text-size-adjust: 100%;
-  }
+/* ─── TOKENS ─────────────────────────────────────────────────── */
+:root {
+  --bg:          #050505;
+  --bg2:         #0a0a0f;
+  --surf:        rgba(255,255,255,0.028);
+  --surf2:       rgba(255,255,255,0.05);
+  --surf3:       rgba(255,255,255,0.07);
+  --border:      rgba(255,255,255,0.06);
+  --border2:     rgba(255,255,255,0.12);
+  --border3:     rgba(255,255,255,0.2);
+  --t1:          #f1f5f9;
+  --t2:          #94a3b8;
+  --t3:          #475569;
+  --blue:        #3b82f6;
+  --purple:      #8b5cf6;
+  --grad:        linear-gradient(135deg,#3b82f6,#8b5cf6);
+  --grad-t:      linear-gradient(135deg,#60a5fa,#a78bfa);
+  --danger:      #ef4444;
+  --warn:        #f59e0b;
+  --ok:          #10b981;
+  --r1:8px; --r2:12px; --r3:16px; --r4:20px; --r5:24px;
+  --blur:        blur(24px);
+  --sh-sm:       0 2px 8px rgba(0,0,0,.35);
+  --sh-md:       0 4px 24px rgba(0,0,0,.55);
+  --sh-lg:       0 8px 48px rgba(0,0,0,.75);
+}
 
-  /* LOGIN */
-  #login-screen {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    padding: 20px;
-  }
-  #login-screen h1 {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 3rem;
-    letter-spacing: 4px;
-    margin-bottom: 40px;
-    color: #fff;
-  }
-  #login-screen input {
-    width: 320px;
-    padding: 16px 18px;
-    margin-bottom: 16px;
-    background: #0F181E;
-    border: 1px solid #1a2a35;
-    border-radius: 10px;
-    color: #e0e0e0;
-    font-size: 17px;
-    font-family: 'Inter', sans-serif;
-    outline: none;
-  }
-  #login-screen input:focus { border-color: #2a4a5a; }
-  #login-screen button {
-    width: 320px;
-    padding: 16px;
-    background: #1a2a35;
-    border: none;
-    border-radius: 10px;
-    color: #fff;
-    font-size: 17px;
-    font-weight: 500;
-    cursor: pointer;
-    margin-top: 8px;
-  }
-  #login-screen button:hover { background: #2a4a5a; }
-  #login-error { color: #ff6b6b; margin-top: 12px; font-size: 15px; }
+/* ─── RESET ──────────────────────────────────────────────────── */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit}
 
-  /* APP */
-  #app { display: none; max-width: 700px; margin: 0 auto; padding: 20px 16px; }
-  
-  header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid #1a1a1a;
-  }
-  header h1 {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 2.2rem;
-    letter-spacing: 3px;
-    color: #fff;
-  }
-  #btn-logout {
-    background: none;
-    border: 1px solid #333;
-    color: #bbb;
-    padding: 10px 18px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 14px;
-  }
-  #btn-logout:hover { border-color: #555; color: #fff; }
+/* ─── BASE ───────────────────────────────────────────────────── */
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--t1);
+  font-family:'Inter',sans-serif;
+  font-size:15px;
+  min-height:100vh;
+  -webkit-text-size-adjust:100%;
+  overflow-x:hidden;
+}
 
-  /* MONTHLY TOTALS */
-  #totals-row {
-    display: flex;
-    justify-content: center;
-    gap: 24px;
-    margin-bottom: 20px;
-    padding: 10px 0;
-  }
-  .total-inline {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.6rem;
-    color: #fff;
-    letter-spacing: 1px;
-  }
-  .total-inline .label {
-    font-family: 'Inter', sans-serif;
-    font-size: 12px;
-    font-weight: 400;
-    color: #999;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    margin-right: 6px;
-  }
+/* ─── NOISE OVERLAY ──────────────────────────────────────────── */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  pointer-events:none;z-index:9000;
+  opacity:.45;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
+}
 
-  /* STATUS CARDS */
-  #status-cards, #task-status-cards {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-  .status-card {
-    border-radius: 12px;
-    padding: 24px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .status-card:hover { transform: scale(1.02); }
-  .status-card .count {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 2.8rem;
-    color: #fff;
-    line-height: 1;
-  }
-  .status-card .status-label {
-    font-size: 13px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    margin-top: 6px;
-  }
-  .status-overdue { background: #2a1010; }
-  .status-overdue .status-label { color: #ff6b6b; }
-  .status-soon { background: #2a2010; }
-  .status-soon .status-label { color: #ffa94d; }
-  .status-open { background: #0F181E; }
-  .status-open .status-label { color: #74c0fc; }
-  .status-open.active-filter { outline: 2px solid #74c0fc; outline-offset: -2px; }
-  .status-overdue.active-filter { outline: 2px solid #ff6b6b; outline-offset: -2px; }
+/* ─── UTIL ───────────────────────────────────────────────────── */
+.grad-text{background:var(--grad-t);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.glass{background:var(--surf);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border:1px solid var(--border)}
+.icon   {width:16px;height:16px;stroke-width:1.75;flex-shrink:0;display:inline-block;vertical-align:middle}
+.icon-sm{width:14px;height:14px;stroke-width:2;flex-shrink:0;display:inline-block;vertical-align:middle}
+.icon-lg{width:20px;height:20px;stroke-width:1.5;flex-shrink:0;display:inline-block;vertical-align:middle}
+.icon-xl{width:24px;height:24px;stroke-width:1.5;flex-shrink:0;display:inline-block;vertical-align:middle}
 
-  /* STATUS DETAIL PANEL */
-  #status-detail {
-    display: none;
-    margin-bottom: 20px;
-    background: #0F181E;
-    border-radius: 12px;
-    padding: 16px;
-  }
-  #status-detail.show { display: block; }
-  #status-detail-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.2rem;
-    letter-spacing: 2px;
-    margin-bottom: 12px;
-    color: #fff;
-  }
-  .status-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid #1a2a35;
-  }
-  .status-item:last-child { border-bottom: none; }
-  .status-item-name { color: #fff; font-size: 16px; font-weight: 500; }
-  .status-item-info { text-align: right; }
-  .status-item-amount { color: #fff; font-size: 16px; font-weight: 500; }
-  .status-item-days { font-size: 13px; margin-top: 2px; }
-  .status-item-days.overdue { color: #ff6b6b; }
-  .status-item-days.soon { color: #ffa94d; }
+/* ─── ANIMATIONS ─────────────────────────────────────────────── */
+@keyframes fadeIn   {from{opacity:0}to{opacity:1}}
+@keyframes slideUp  {from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes checkPop {0%{transform:scale(0)}60%{transform:scale(1.35)}100%{transform:scale(1)}}
+@keyframes glowPulse{0%,100%{box-shadow:0 0 20px rgba(59,130,246,.08)}50%{box-shadow:0 0 40px rgba(59,130,246,.22)}}
 
-  /* CATEGORY / FILTER PILLS — shared style */
-  .filter-pills {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-  }
-  .cat-btn {
-    padding: 8px 16px;
-    border-radius: 20px;
-    border: 1px solid #1a2a35;
-    background: none;
-    color: #bbb;
-    font-size: 14px;
-    cursor: pointer;
-    font-family: 'Inter', sans-serif;
-    transition: all 0.15s;
-  }
-  .cat-btn:hover:hover { border-color: #2a4a5a; color: #fff; }
-  .cat-btn.active.active { background: #1a2a35; color: #fff; border-color: #2a4a5a; }
+/* ─── SCROLLBAR ──────────────────────────────────────────────── */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.09);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.18)}
 
-  /* ADD BUTTON */
-  .btn-add {
-    width: 100%;
-    padding: 18px;
-    background: #0F181E;
-    border: 2px dashed #1a2a35;
-    border-radius: 12px;
-    color: #999;
-    font-size: 17px;
-    cursor: pointer;
-    margin-bottom: 24px;
-    transition: all 0.2s;
-  }
-  .btn-add:hover { border-color: #2a4a5a; color: #fff; }
+/* ═══════════════════════════════════════════════════════════════
+   LOGIN
+═══════════════════════════════════════════════════════════════ */
+#login-screen{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:100vh;padding:24px;
+  position:relative;
+  animation:fadeIn .5s ease;
+}
+/* Ambient glow blob */
+#login-screen::before{
+  content:'';position:absolute;
+  width:480px;height:480px;border-radius:50%;
+  background:radial-gradient(ellipse,rgba(59,130,246,.11) 0%,rgba(139,92,246,.06) 45%,transparent 70%);
+  pointer-events:none;top:50%;left:50%;transform:translate(-50%,-50%);
+}
+.login-card{
+  width:100%;max-width:390px;
+  background:rgba(255,255,255,.026);
+  backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
+  border:1px solid var(--border);
+  border-radius:var(--r5);
+  padding:44px 36px 36px;
+  position:relative;z-index:1;
+  box-shadow:var(--sh-lg),0 0 80px rgba(59,130,246,.07);
+  animation:slideUp .5s cubic-bezier(.16,1,.3,1);
+}
+.login-brand{text-align:center;margin-bottom:40px}
+.login-brand h1{font-family:'Bebas Neue',sans-serif;font-size:3rem;letter-spacing:8px}
+.login-brand p{font-size:12px;color:var(--t3);letter-spacing:4px;text-transform:uppercase;margin-top:8px}
 
-  /* SECTIONS */
-  .section-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.3rem;
-    letter-spacing: 2px;
-    color: #ff6b6b;
-    margin: 24px 0 14px 0;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #1a1a1a;
-  }
-  .section-title.upcoming { color: #ffa94d; }
-  .section-title.active { color: #69db7c; }
-  .section-title.bills { color: #74c0fc; }
+/* Input with icon */
+.inp-wrap{position:relative;margin-bottom:12px}
+.inp-wrap .inp-ico{
+  position:absolute;left:15px;top:50%;transform:translateY(-50%);
+  color:var(--t3);display:flex;align-items:center;pointer-events:none;
+}
+.inp-wrap input{
+  width:100%;padding:14px 16px 14px 44px;
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--border);border-radius:var(--r2);
+  color:var(--t1);font-size:15px;outline:none;
+  transition:border-color .2s,background .2s;
+}
+.inp-wrap input::placeholder{color:var(--t3)}
+.inp-wrap input:focus{border-color:rgba(59,130,246,.5);background:rgba(59,130,246,.04)}
 
-  /* SUBSCRIPTION CARD */
-  .sub-card {
-    background: #0F181E;
-    border-radius: 12px;
-    padding: 16px 18px;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    transition: background 0.15s;
-    gap: 14px;
-  }
-  .sub-card:hover { background: #142028; }
-  .sub-icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 10px;
-    background: #1a2a35;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    overflow: hidden;
-  }
-  .sub-icon img { width: 28px; height: 28px; object-fit: contain; }
-  .sub-icon .fallback { font-size: 18px; font-weight: 600; color: #7a9aaa; }
-  .sub-left { flex: 1; min-width: 0; }
-  .sub-name { font-weight: 500; color: #fff; font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .sub-detail { font-size: 14px; color: #999; margin-top: 4px; }
-  .sub-days { font-size: 13px; margin-top: 3px; font-weight: 500; }
-  .sub-days.overdue { color: #ff6b6b; }
-  .sub-days.soon { color: #ffa94d; }
-  .sub-days.ok { color: #888; }
-  .sub-right { text-align: right; flex-shrink: 0; }
-  .sub-amount { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; color: #fff; }
-  .sub-cycle { font-size: 13px; color: #999; }
-  .sub-unknown { color: #888; font-size: 16px; }
-  .sub-category { font-size: 12px; color: #7a9aaa; margin-top: 3px; }
+.btn-primary{
+  width:100%;padding:15px;
+  background:var(--grad);border:none;border-radius:var(--r2);
+  color:#fff;font-size:15px;font-weight:600;letter-spacing:.4px;
+  margin-top:10px;
+  transition:opacity .2s,transform .15s,box-shadow .2s;
+  position:relative;overflow:hidden;
+}
+.btn-primary::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.12),transparent);
+  opacity:0;transition:opacity .2s;
+}
+.btn-primary:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 6px 28px rgba(59,130,246,.45)}
+.btn-primary:hover::after{opacity:1}
+.btn-primary:active{transform:translateY(0)}
+.btn-primary:disabled{opacity:.55;pointer-events:none}
 
-  /* MODAL */
-  .modal-overlay {
-    display: none;
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.85);
-    z-index: 100;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-  }
-  .modal-overlay.show { display: flex; }
-  .modal-box {
-    background: #0F181E;
-    border-radius: 16px;
-    padding: 30px 24px;
-    width: 100%;
-    max-width: 440px;
-    max-height: 90vh;
-    overflow-y: auto;
-  }
-  .modal-box h2 {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.6rem;
-    letter-spacing: 2px;
-    color: #fff;
-    margin-bottom: 24px;
-  }
-  .form-group { margin-bottom: 18px; }
-  .form-group label {
-    display: block;
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: #999;
-    margin-bottom: 8px;
-    font-weight: 500;
-  }
-  .form-group input, .form-group select, .form-group textarea {
-    width: 100%;
-    padding: 14px 16px;
-    background: #080808;
-    border: 1px solid #1a2a35;
-    border-radius: 10px;
-    color: #e0e0e0;
-    font-size: 17px;
-    font-family: 'Inter', sans-serif;
-    outline: none;
-  }
-  .form-group textarea { resize: vertical; min-height: 80px; }
-  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #2a4a5a; }
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  
-  .btn-save {
-    width: 100%;
-    padding: 16px;
-    background: #1a2a35;
-    border: none;
-    border-radius: 10px;
-    color: #fff;
-    font-size: 17px;
-    font-weight: 500;
-    cursor: pointer;
-    margin-top: 10px;
-  }
-  .btn-save:hover { background: #2a4a5a; }
-  .btn-delete {
-    width: 100%;
-    padding: 14px;
-    background: none;
-    border: 1px solid #3a1a1a;
-    border-radius: 10px;
-    color: #ff6b6b;
-    font-size: 15px;
-    cursor: pointer;
-    margin-top: 12px;
-  }
-  .btn-delete:hover { background: #2a1010; }
-  .btn-cancel {
-    width: 100%;
-    padding: 14px;
-    background: none;
-    border: none;
-    color: #999;
-    font-size: 15px;
-    cursor: pointer;
-    margin-top: 10px;
-  }
+#login-error{color:var(--danger);font-size:13px;margin-top:14px;text-align:center;min-height:18px}
 
-  .empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: #666;
-    font-size: 17px;
-  }
+/* ═══════════════════════════════════════════════════════════════
+   APP SHELL
+═══════════════════════════════════════════════════════════════ */
+#app{display:none;max-width:740px;margin:0 auto;padding:28px 18px 60px}
 
-  /* TABS */
-  .tab-bar {
-    display: flex;
-    gap: 0;
-    margin-bottom: 20px;
-    border-bottom: 2px solid #1a1a1a;
-  }
-  .tab-btn {
-    flex: 1;
-    padding: 14px 0;
-    text-align: center;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.2rem;
-    letter-spacing: 2px;
-    color: #666;
-    cursor: pointer;
-    border: none;
-    background: none;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -2px;
-    transition: all 0.15s;
-  }
-  .tab-btn:hover { color: #bbb; }
-  .tab-btn.active { color: #fff; border-bottom-color: #3b82f6; }
-  .tab-content { display: none; }
-  .tab-content.active { display: block; }
+/* ─── HEADER ─────────────────────────────────────────────────── */
+.app-header{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:32px;padding-bottom:22px;
+  border-bottom:1px solid var(--border);
+}
+.app-header h1{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:2.1rem;letter-spacing:5px;
+  transition:all .3s;
+}
+.user-chip{
+  display:flex;align-items:center;gap:9px;
+  padding:7px 14px;
+  background:var(--surf);border:1px solid var(--border);border-radius:50px;
+  cursor:pointer;transition:all .2s;user-select:none;
+}
+.user-chip:hover{border-color:var(--border2);background:var(--surf2)}
+.user-avt{
+  width:26px;height:26px;border-radius:50%;
+  background:var(--grad);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;color:#fff;flex-shrink:0;
+}
+.user-chip .u-email{font-size:13px;color:var(--t2);max-width:155px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-  /* TASK COLLAPSIBLE GROUPS */
-  .task-group { margin-bottom: 8px; }
-  .task-group-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 16px;
-    background: #0c1218;
-    border-radius: 10px;
-    cursor: pointer;
-    user-select: none;
-    transition: background 0.15s;
-    margin-bottom: 4px;
-  }
-  .task-group-header:hover { background: #111a22; }
-  .task-group-label {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.1rem;
-    letter-spacing: 2px;
-  }
-  .task-group-label.overdue { color: #ff6b6b; }
-  .task-group-label.today { color: #ffa94d; }
-  .task-group-label.this-week { color: #74c0fc; }
-  .task-group-label.next-week { color: #a78bfa; }
-  .task-group-label.upcoming-g { color: #69db7c; }
-  .task-group-label.no-date { color: #888; }
-  .task-group-meta {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .task-group-count {
-    font-size: 13px;
-    color: #888;
-  }
-  .task-group-chevron {
-    font-size: 12px;
-    color: #666;
-    transition: transform 0.2s;
-  }
-  .task-group-chevron.open { transform: rotate(180deg); }
-  .task-group-items {
-    overflow: hidden;
-    transition: max-height 0.25s ease;
-  }
-  .task-group-items.collapsed { max-height: 0 !important; }
+/* ─── TABS ────────────────────────────────────────────────────── */
+.tab-bar{
+  display:flex;border-bottom:1px solid var(--border);
+  margin-bottom:30px;
+}
+.tab-btn{
+  padding:12px 22px;
+  font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:2px;
+  color:var(--t3);border:none;background:none;
+  border-bottom:2px solid transparent;margin-bottom:-1px;
+  transition:color .2s,border-color .2s;
+  display:flex;align-items:center;gap:8px;
+}
+.tab-btn:hover{color:var(--t2)}
+.tab-btn.active{color:var(--t1);border-bottom-color:var(--blue)}
+.tab-content{display:none}
+.tab-content.active{display:block;animation:slideUp .28s cubic-bezier(.16,1,.3,1)}
 
-  /* TASK CARD */
-  .task-card {
-    background: #0F181E;
-    border: 1px solid #1a2a35;
-    border-left: 3px solid transparent;
-    border-radius: 10px;
-    padding: 14px 16px;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .task-card:hover { border-color: #2a4a5a; }
-  .task-card.overdue-card { border-left-color: #dc2626; }
-  .task-check {
-    width: 24px;
-    height: 24px;
-    min-width: 24px;
-    border: 2px solid #1a2a35;
-    border-radius: 50%;
-    margin-top: 1px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-  }
-  .task-check:hover { border-color: #3b82f6; background: rgba(59,130,246,0.1); }
-  .task-check.checked { background: #3b82f6; border-color: #3b82f6; }
-  .task-check.checked::after { content: '\2713'; color: #fff; font-size: 13px; font-weight: 600; }
-  .task-content { flex: 1; min-width: 0; }
-  .task-title { font-size: 15px; font-weight: 500; color: #fff; margin-bottom: 4px; }
-  .task-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .task-date { font-size: 12px; color: #888; }
-  .task-date.overdue { color: #dc2626; font-weight: 500; }
-  .task-notes-preview { font-size: 12px; color: #666; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .priority-dot { width: 8px; height: 8px; min-width: 8px; border-radius: 50%; }
-  .priority-dot.high { background: #ff6b6b; }
-  .priority-dot.medium { background: #ffa94d; }
-  .priority-dot.low { background: #74c0fc; }
+/* ─── TOTALS ──────────────────────────────────────────────────── */
+.totals-row{
+  display:flex;gap:1px;
+  background:var(--border);
+  border-radius:var(--r3);overflow:hidden;
+  margin-bottom:24px;
+}
+.total-block{
+  flex:1;padding:22px 26px;background:var(--bg);
+  text-align:center;
+}
+.total-block:first-child{border-radius:var(--r3) 0 0 var(--r3)}
+.total-block:last-child{border-radius:0 var(--r3) var(--r3) 0}
+.total-label{font-size:10px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--t3);margin-bottom:8px}
+.total-amt{font-family:'Bebas Neue',sans-serif;font-size:2.6rem;letter-spacing:1px;color:var(--t1);line-height:1}
+.total-period{font-size:11px;color:var(--t3);margin-top:5px}
 
-  .empty-tasks {
-    text-align: center;
-    padding: 60px 20px;
-    color: #666;
-  }
-  .empty-tasks h3 {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.8rem;
-    color: #555;
-    margin-bottom: 8px;
-    letter-spacing: 2px;
-  }
-  .empty-tasks p { font-size: 15px; }
+/* ─── STATUS CARDS ───────────────────────────────────────────── */
+.status-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px}
+.s-card{
+  background:var(--surf);border:1px solid var(--border);
+  border-radius:var(--r3);padding:20px 20px 18px;
+  cursor:pointer;transition:all .22s;position:relative;overflow:hidden;
+}
+.s-card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .22s}
+.s-card:hover{transform:translateY(-2px);box-shadow:var(--sh-md)}
+.s-card:hover::before{opacity:1}
 
-  @media (max-width: 500px) {
-    body { font-size: 17px; }
-    .modal-box { padding: 24px 18px; }
-    header h1 { font-size: 1.8rem; }
-    .sub-name { font-size: 16px; }
-    .sub-amount { font-size: 1.5rem; }
-    .status-card .count { font-size: 2.6rem; }
-    .status-card { padding: 20px; }
-  }
+.s-card.s-danger{border-color:rgba(239,68,68,.18)}
+.s-card.s-danger::before{background:rgba(239,68,68,.04)}
+.s-card.s-danger:hover{border-color:rgba(239,68,68,.35);box-shadow:0 8px 32px rgba(239,68,68,.14)}
+.s-card.s-warn{border-color:rgba(245,158,11,.18)}
+.s-card.s-warn::before{background:rgba(245,158,11,.04)}
+.s-card.s-warn:hover{border-color:rgba(245,158,11,.35);box-shadow:0 8px 32px rgba(245,158,11,.14)}
+.s-card.s-info{border-color:rgba(59,130,246,.18)}
+.s-card.s-info::before{background:rgba(59,130,246,.04)}
+.s-card.s-info:hover{border-color:rgba(59,130,246,.35);box-shadow:0 8px 32px rgba(59,130,246,.14)}
+
+.s-card.active-filter.s-danger{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.4)}
+.s-card.active-filter.s-warn{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.4)}
+.s-card.active-filter.s-info{background:rgba(59,130,246,.08);border-color:rgba(59,130,246,.4)}
+
+.s-card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+.s-card-ico{
+  width:34px;height:34px;border-radius:var(--r1);
+  display:flex;align-items:center;justify-content:center;
+}
+.s-danger .s-card-ico{background:rgba(239,68,68,.12);color:var(--danger)}
+.s-warn   .s-card-ico{background:rgba(245,158,11,.12);color:var(--warn)}
+.s-info   .s-card-ico{background:rgba(59,130,246,.12); color:var(--blue)}
+.s-card-num{font-family:'Bebas Neue',sans-serif;font-size:2.8rem;line-height:1;color:var(--t1)}
+.s-card-lbl{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase}
+.s-danger .s-card-lbl{color:var(--danger)}
+.s-warn   .s-card-lbl{color:var(--warn)}
+.s-info   .s-card-lbl{color:var(--blue)}
+
+/* ─── STATUS DETAIL PANEL ─────────────────────────────────────── */
+#status-detail{
+  display:none;margin-bottom:24px;
+  background:var(--surf);border:1px solid var(--border);
+  border-radius:var(--r3);overflow:hidden;
+}
+#status-detail.show{display:block;animation:slideUp .22s ease}
+.sd-head{
+  padding:13px 18px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;
+}
+.sd-title{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:2px;color:var(--t1)}
+.sd-item{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:13px 18px;border-bottom:1px solid var(--border);
+  transition:background .15s;
+}
+.sd-item:last-child{border-bottom:none}
+.sd-item:hover{background:rgba(255,255,255,.025)}
+.sd-name{color:var(--t1);font-size:14px;font-weight:500}
+.sd-amt{color:var(--t1);font-size:14px;font-weight:600;text-align:right}
+.sd-days{font-size:12px;margin-top:2px;text-align:right}
+.sd-days.overdue{color:var(--danger)}
+.sd-days.soon{color:var(--warn)}
+
+/* ─── FILTER PILLS ────────────────────────────────────────────── */
+.filter-pills{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.cat-btn{
+  padding:6px 14px;border-radius:50px;
+  border:1px solid var(--border);background:none;
+  color:var(--t2);font-size:13px;font-weight:500;
+  transition:all .15s;display:flex;align-items:center;gap:5px;
+}
+.cat-btn:hover{border-color:var(--border2);color:var(--t1)}
+.cat-btn.active{background:rgba(59,130,246,.1);color:var(--blue);border-color:rgba(59,130,246,.3)}
+
+/* ─── ADD BUTTON ──────────────────────────────────────────────── */
+.btn-add{
+  width:100%;padding:15px;
+  background:transparent;
+  border:1px dashed rgba(255,255,255,.09);
+  border-radius:var(--r3);
+  color:var(--t3);font-size:14px;font-weight:500;
+  margin-bottom:24px;
+  transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.btn-add:hover{border-color:rgba(59,130,246,.4);color:var(--blue);background:rgba(59,130,246,.04)}
+
+/* ─── SECTION TITLES ──────────────────────────────────────────── */
+.sec-title{
+  display:flex;align-items:center;gap:8px;
+  font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:2.5px;
+  margin:26px 0 12px;padding-bottom:10px;
+  border-bottom:1px solid var(--border);
+}
+.sec-title.t-danger{color:var(--danger)}
+.sec-title.t-warn  {color:var(--warn)}
+.sec-title.t-ok    {color:var(--ok)}
+.sec-title.t-blue  {color:var(--blue)}
+
+/* ─── SUB CARD ────────────────────────────────────────────────── */
+.sub-card{
+  background:var(--surf);border:1px solid var(--border);border-left:3px solid transparent;
+  border-radius:var(--r3);padding:15px 17px;
+  margin-bottom:9px;
+  display:flex;align-items:center;gap:14px;
+  cursor:pointer;transition:all .2s;position:relative;overflow:hidden;
+}
+.sub-card::after{
+  content:'';position:absolute;inset:0;
+  background:var(--grad);opacity:0;transition:opacity .2s;pointer-events:none;
+}
+.sub-card:hover{border-color:var(--border2);transform:translateY(-1px);box-shadow:var(--sh-md)}
+.sub-card:hover::after{opacity:.015}
+.sub-card.c-overdue{border-left-color:var(--danger)}
+.sub-card.c-soon   {border-left-color:var(--warn)}
+
+.sub-ico{
+  width:42px;height:42px;min-width:42px;
+  border-radius:var(--r2);
+  background:var(--surf2);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;overflow:hidden;
+  position:relative;z-index:1;
+}
+.sub-ico img{width:24px;height:24px;object-fit:contain}
+.sub-ico .fb{
+  font-size:16px;font-weight:700;
+  background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.sub-left{flex:1;min-width:0;position:relative;z-index:1}
+.sub-name{font-weight:600;color:var(--t1);font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sub-row2{display:flex;align-items:center;gap:7px;margin-top:4px}
+.sub-status{font-size:12px;font-weight:500;display:flex;align-items:center;gap:3px;margin-top:4px}
+.sub-status.overdue{color:var(--danger)}
+.sub-status.soon{color:var(--warn)}
+.sub-status.ok{color:var(--t3)}
+.cat-pill{
+  font-size:11px;padding:2px 8px;border-radius:50px;
+  background:rgba(255,255,255,.05);border:1px solid var(--border);
+  color:var(--t3);font-weight:500;white-space:nowrap;
+}
+.sub-right{text-align:right;flex-shrink:0;position:relative;z-index:1}
+.sub-amt{font-family:'Bebas Neue',sans-serif;font-size:1.55rem;color:var(--t1);line-height:1;letter-spacing:.5px}
+.sub-cyc{font-size:12px;color:var(--t3);margin-top:3px}
+
+.empty-state{text-align:center;padding:64px 20px;color:var(--t3)}
+.empty-ico{
+  margin:0 auto 16px;width:52px;height:52px;border-radius:50%;
+  background:var(--surf);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;color:var(--t3);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MODALS
+═══════════════════════════════════════════════════════════════ */
+.modal-ov{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.82);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  z-index:2000;
+  align-items:flex-end;justify-content:center;padding:0;
+}
+@media(min-width:580px){.modal-ov{align-items:center;padding:24px}}
+.modal-ov.show{display:flex}
+.modal-ov.show .modal-box{animation:slideUp .32s cubic-bezier(.16,1,.3,1)}
+.modal-box{
+  background:#0d1117;border:1px solid var(--border);
+  border-radius:var(--r5) var(--r5) 0 0;
+  padding:24px 22px 36px;
+  width:100%;max-width:490px;max-height:92vh;overflow-y:auto;
+}
+@media(min-width:580px){.modal-box{border-radius:var(--r5);padding:34px 30px}}
+.modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 22px}
+@media(min-width:580px){.modal-handle{display:none}}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:26px}
+.modal-ttl{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:2px;color:var(--t1)}
+.modal-cls{
+  width:32px;height:32px;border-radius:50%;
+  border:1px solid var(--border);background:var(--surf);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:var(--t2);transition:all .2s;
+}
+.modal-cls:hover{border-color:var(--border2);color:var(--t1)}
+
+/* ─── FORM ────────────────────────────────────────────────────── */
+.fg{margin-bottom:16px}
+.fg label{
+  display:flex;align-items:center;gap:6px;
+  font-size:10px;font-weight:600;letter-spacing:1.8px;text-transform:uppercase;
+  color:var(--t3);margin-bottom:8px;
+}
+.fg input,.fg select,.fg textarea{
+  width:100%;padding:13px 15px;
+  background:rgba(255,255,255,.03);border:1px solid var(--border);
+  border-radius:var(--r2);color:var(--t1);font-size:15px;
+  outline:none;transition:border-color .2s,background .2s;
+  -webkit-appearance:none;
+}
+.fg select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 13px center;padding-right:38px;
+}
+.fg select option{background:#0d1117;color:var(--t1)}
+.fg input::placeholder,.fg textarea::placeholder{color:var(--t3)}
+.fg textarea{resize:vertical;min-height:82px}
+.fg input:focus,.fg select:focus,.fg textarea:focus{
+  border-color:rgba(59,130,246,.5);background:rgba(59,130,246,.04);
+}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.divider{height:1px;background:var(--border);margin:20px 0}
+
+.btn-save{
+  width:100%;padding:15px;background:var(--grad);border:none;
+  border-radius:var(--r2);color:#fff;font-size:15px;font-weight:600;
+  letter-spacing:.4px;margin-top:8px;transition:all .2s;
+}
+.btn-save:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 6px 28px rgba(59,130,246,.4)}
+.btn-danger{
+  width:100%;padding:13px;background:none;
+  border:1px solid rgba(239,68,68,.22);border-radius:var(--r2);
+  color:var(--danger);font-size:14px;font-weight:500;
+  margin-top:10px;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.btn-danger:hover{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.4)}
+.btn-ghost{
+  width:100%;padding:13px;background:none;border:none;
+  color:var(--t3);font-size:14px;
+  margin-top:6px;transition:color .2s;
+}
+.btn-ghost:hover{color:var(--t2)}
+
+/* ─── RECURRENCE END TOGGLE ─────────────────────────────────── */
+#t-rec-end-g{display:none}
+#t-rec-end-g.show{display:block}
+
+/* ═══════════════════════════════════════════════════════════════
+   TASKS
+═══════════════════════════════════════════════════════════════ */
+.task-group{margin-bottom:6px}
+.tg-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;border-radius:var(--r2);
+  cursor:pointer;user-select:none;transition:background .15s;margin-bottom:6px;
+}
+.tg-head:hover{background:var(--surf)}
+.tg-left{display:flex;align-items:center;gap:8px}
+.tg-lbl{font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:2px}
+.tg-lbl.overdue  {color:var(--danger)}
+.tg-lbl.today    {color:var(--warn)}
+.tg-lbl.this-week{color:var(--blue)}
+.tg-lbl.next-week{color:#a78bfa}
+.tg-lbl.upcoming {color:var(--ok)}
+.tg-lbl.no-date  {color:var(--t3)}
+.tg-meta{display:flex;align-items:center;gap:8px}
+.tg-cnt{font-size:12px;color:var(--t3);font-weight:500}
+.tg-chev{color:var(--t3);transition:transform .25s;display:flex}
+.tg-chev.open{transform:rotate(180deg)}
+.tg-items{overflow:hidden;transition:max-height .3s cubic-bezier(.4,0,.2,1)}
+.tg-items.collapsed{max-height:0!important}
+
+/* Task card */
+.task-card{
+  background:var(--surf);border:1px solid var(--border);border-left:3px solid transparent;
+  border-radius:var(--r2);padding:14px 16px;
+  margin-bottom:8px;display:flex;align-items:flex-start;gap:12px;
+  cursor:pointer;transition:all .2s;
+}
+.task-card:hover{border-color:var(--border2);transform:translateY(-1px);box-shadow:var(--sh-sm)}
+.task-card.c-overdue{border-left-color:var(--danger)}
+.task-card.c-overdue:hover{box-shadow:0 4px 20px rgba(239,68,68,.12)}
+
+/* Checkbox */
+.t-chk{
+  width:22px;height:22px;min-width:22px;
+  border:2px solid var(--border2);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;margin-top:1px;
+  cursor:pointer;transition:all .2s;
+}
+.t-chk:hover{border-color:var(--blue);background:rgba(59,130,246,.1)}
+.t-chk.checked{background:var(--grad);border-color:transparent}
+.t-chk.checked::after{
+  content:'✓';color:#fff;font-size:11px;font-weight:700;
+  animation:checkPop .25s cubic-bezier(.34,1.56,.64,1) forwards;
+}
+
+.t-body{flex:1;min-width:0}
+.t-title{font-size:14px;font-weight:500;color:var(--t1);margin-bottom:5px;line-height:1.45}
+.t-title.done{text-decoration:line-through;opacity:.42}
+.t-meta{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.prio-dot{width:6px;height:6px;min-width:6px;border-radius:50%;flex-shrink:0}
+.prio-dot.high  {background:var(--danger)}
+.prio-dot.medium{background:var(--warn)}
+.prio-dot.low   {background:var(--blue)}
+.t-date{font-size:12px;color:var(--t3);font-weight:500}
+.t-date.overdue{color:var(--danger)}
+.t-date.today  {color:var(--warn)}
+.rec-badge{
+  display:inline-flex;align-items:center;gap:3px;
+  font-size:11px;color:var(--t3);
+  background:var(--surf2);border:1px solid var(--border);
+  border-radius:50px;padding:2px 7px;
+}
+.t-notes-pre{font-size:12px;color:var(--t3);margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.empty-tasks{text-align:center;padding:64px 20px;color:var(--t3)}
+.empty-tasks-ico{
+  margin:0 auto 16px;width:56px;height:56px;border-radius:50%;
+  background:var(--surf);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;color:var(--t3);
+}
+.empty-tasks h3{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;color:var(--t3);margin-bottom:8px;letter-spacing:2px}
+.empty-tasks p{font-size:14px}
+
+/* ─── RESPONSIVE ─────────────────────────────────────────────── */
+@media(max-width:480px){
+  #app{padding:18px 14px 50px}
+  .app-header{margin-bottom:22px}
+  .user-chip .u-email{display:none}
+  .total-amt{font-size:2.1rem}
+  .s-card-num{font-size:2.3rem}
+  .form-row{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
+<!-- ══════════════════════════════════════════════════
+     LOGIN
+══════════════════════════════════════════════════ -->
 <div id="login-screen">
-  <h1>SUB TRACKER</h1>
-  <input type="email" id="login-email" placeholder="Email">
-  <input type="password" id="login-password" placeholder="Password">
-  <button onclick="doLogin()">Sign In</button>
-  <div id="login-error"></div>
+  <div class="login-card">
+    <div class="login-brand">
+      <h1 class="grad-text">SUB TRACKER</h1>
+      <p>Financial Command Center</p>
+    </div>
+    <div class="inp-wrap">
+      <span class="inp-ico"><i data-lucide="mail" class="icon"></i></span>
+      <input type="email" id="login-email" placeholder="Email address">
+    </div>
+    <div class="inp-wrap">
+      <span class="inp-ico"><i data-lucide="lock" class="icon"></i></span>
+      <input type="password" id="login-password" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn-primary" id="login-btn" onclick="doLogin()">Sign In</button>
+    <div id="login-error"></div>
+  </div>
 </div>
 
-<!-- APP -->
+<!-- ══════════════════════════════════════════════════
+     APP
+══════════════════════════════════════════════════ -->
 <div id="app">
-  <header>
-    <h1 id="app-title">SUB TRACKER</h1>
-    <button id="btn-logout" onclick="doLogout()">Sign Out</button>
-  </header>
-
-  <div class="tab-bar">
-    <button class="tab-btn active" onclick="switchTab('subs',this)">Subscriptions</button>
-    <button class="tab-btn" onclick="switchTab('tasks',this)">Tasks</button>
+  <div class="app-header">
+    <h1 id="app-title" class="grad-text">SUB TRACKER</h1>
+    <div class="user-chip" onclick="doLogout()" title="Sign out">
+      <div class="user-avt" id="user-avt">?</div>
+      <span class="u-email" id="user-email"></span>
+      <i data-lucide="log-out" class="icon-sm" style="color:var(--t3)"></i>
+    </div>
   </div>
 
-  <!-- SUBSCRIPTIONS TAB -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('subs',this)">
+      <i data-lucide="credit-card" class="icon"></i>Subscriptions
+    </button>
+    <button class="tab-btn" onclick="switchTab('tasks',this)">
+      <i data-lucide="check-square" class="icon"></i>Tasks
+    </button>
+  </div>
+
+  <!-- ── SUBS TAB ───────────────────────────────── -->
   <div class="tab-content active" id="tab-subs">
-    <div id="totals-row">
-      <div class="total-inline"><span class="label">ZAR</span> <span id="total-zar">R0</span></div>
-      <div class="total-inline"><span class="label">USD</span> <span id="total-usd">$0</span></div>
-    </div>
-    <div id="status-cards">
-      <div class="status-card status-overdue" onclick="toggleStatusDetail('overdue')">
-        <div class="count" id="overdue-count">0</div>
-        <div class="status-label">Overdue</div>
+    <div class="totals-row">
+      <div class="total-block">
+        <div class="total-label">ZAR / mo</div>
+        <div class="total-amt" id="total-zar">R0</div>
       </div>
-      <div class="status-card status-soon" onclick="toggleStatusDetail('soon')">
-        <div class="count" id="soon-count">0</div>
-        <div class="status-label">Due This Week</div>
+      <div class="total-block">
+        <div class="total-label">USD / mo</div>
+        <div class="total-amt" id="total-usd">$0</div>
       </div>
     </div>
+
+    <div class="status-grid">
+      <div class="s-card s-danger" onclick="toggleStatusDetail('overdue')">
+        <div class="s-card-head">
+          <div class="s-card-ico"><i data-lucide="alert-circle" class="icon-lg"></i></div>
+          <div class="s-card-num" id="overdue-count">0</div>
+        </div>
+        <div class="s-card-lbl">Overdue</div>
+      </div>
+      <div class="s-card s-warn" onclick="toggleStatusDetail('soon')">
+        <div class="s-card-head">
+          <div class="s-card-ico"><i data-lucide="clock" class="icon-lg"></i></div>
+          <div class="s-card-num" id="soon-count">0</div>
+        </div>
+        <div class="s-card-lbl">Due This Week</div>
+      </div>
+    </div>
+
     <div id="status-detail">
-      <div id="status-detail-title"></div>
-      <div id="status-detail-list"></div>
+      <div class="sd-head">
+        <i data-lucide="list" class="icon"></i>
+        <div class="sd-title" id="sd-title"></div>
+      </div>
+      <div id="sd-list"></div>
     </div>
+
     <div id="category-filter" class="filter-pills"></div>
-    <button class="btn-add" onclick="openModal()">+ Add Subscription</button>
+
+    <button class="btn-add" onclick="openModal()">
+      <i data-lucide="plus-circle" class="icon"></i>Add Subscription
+    </button>
     <div id="sub-list"></div>
   </div>
 
-  <!-- TASKS TAB -->
+  <!-- ── TASKS TAB ──────────────────────────────── -->
   <div class="tab-content" id="tab-tasks">
-    <div id="task-status-cards">
-      <div class="status-card status-open" id="task-card-open" onclick="toggleTaskStatusFilter('open')">
-        <div class="count" id="task-open-count">0</div>
-        <div class="status-label">Open</div>
+    <div class="status-grid">
+      <div class="s-card s-info" id="task-card-open" onclick="toggleTaskFilter('open')">
+        <div class="s-card-head">
+          <div class="s-card-ico"><i data-lucide="layers" class="icon-lg"></i></div>
+          <div class="s-card-num" id="task-open-cnt">0</div>
+        </div>
+        <div class="s-card-lbl">Open</div>
       </div>
-      <div class="status-card status-overdue" id="task-card-overdue" onclick="toggleTaskStatusFilter('overdue')">
-        <div class="count" id="task-overdue-count">0</div>
-        <div class="status-label">Overdue</div>
+      <div class="s-card s-danger" id="task-card-overdue" onclick="toggleTaskFilter('overdue')">
+        <div class="s-card-head">
+          <div class="s-card-ico"><i data-lucide="alert-triangle" class="icon-lg"></i></div>
+          <div class="s-card-num" id="task-overdue-cnt">0</div>
+        </div>
+        <div class="s-card-lbl">Overdue</div>
       </div>
     </div>
-    <button class="btn-add" onclick="openTM()">+ Add Task</button>
+    <button class="btn-add" onclick="openTM()">
+      <i data-lucide="plus-circle" class="icon"></i>Add Task
+    </button>
     <div id="task-container"></div>
   </div>
 </div>
 
-<!-- SUBSCRIPTION MODAL -->
-<div id="modal-overlay" class="modal-overlay" onclick="if(event.target===this)closeModal()">
+<!-- ══════════════════════════════════════════════════
+     SUBSCRIPTION MODAL
+══════════════════════════════════════════════════ -->
+<div id="modal-ov" class="modal-ov" onclick="if(event.target===this)closeModal()">
   <div class="modal-box">
-    <h2 id="modal-title">ADD SUBSCRIPTION</h2>
-    <div class="form-group"><label>Name</label><input type="text" id="f-name" placeholder="e.g. Netflix"></div>
-    <div class="form-row">
-      <div class="form-group"><label>Amount</label><input type="number" id="f-amount" placeholder="0.00" step="0.01"></div>
-      <div class="form-group"><label>Currency</label><select id="f-currency"><option value="ZAR">ZAR (R)</option><option value="USD">USD ($)</option></select></div>
+    <div class="modal-handle"></div>
+    <div class="modal-hd">
+      <div class="modal-ttl" id="modal-ttl">ADD SUBSCRIPTION</div>
+      <div class="modal-cls" onclick="closeModal()"><i data-lucide="x" class="icon-sm"></i></div>
+    </div>
+    <div class="fg">
+      <label><i data-lucide="tag" class="icon-sm"></i>Name</label>
+      <input type="text" id="f-name" placeholder="e.g. Netflix">
     </div>
     <div class="form-row">
-      <div class="form-group"><label>Cycle</label><select id="f-cycle"><option value="monthly">Monthly</option><option value="yearly">Yearly</option><option value="once-off">Once-off</option><option value="as-needed">As needed</option></select></div>
-      <div class="form-group"><label>Type</label><select id="f-type"><option value="subscription">Subscription</option><option value="bill">Bill</option></select></div>
+      <div class="fg">
+        <label><i data-lucide="dollar-sign" class="icon-sm"></i>Amount</label>
+        <input type="number" id="f-amount" placeholder="0.00" step="0.01">
+      </div>
+      <div class="fg">
+        <label><i data-lucide="globe" class="icon-sm"></i>Currency</label>
+        <select id="f-currency">
+          <option value="ZAR">ZAR (R)</option>
+          <option value="USD">USD ($)</option>
+        </select>
+      </div>
     </div>
-    <div class="form-group"><label>Category</label><select id="f-category"><option value="">None</option><option value="Software">Software</option><option value="Entertainment">Entertainment</option><option value="Hosting">Hosting</option><option value="Internet">Internet</option><option value="Apps">Apps</option><option value="Bills">Bills</option><option value="Church">Church</option><option value="AI">AI</option><option value="Domains">Domains</option><option value="Other">Other</option></select></div>
     <div class="form-row">
-      <div class="form-group"><label>Next Renewal</label><input type="date" id="f-renewal"></div>
-      <div class="form-group"><label>Last Payment</label><input type="date" id="f-lastpay"></div>
+      <div class="fg">
+        <label><i data-lucide="repeat" class="icon-sm"></i>Cycle</label>
+        <select id="f-cycle">
+          <option value="monthly">Monthly</option>
+          <option value="yearly">Yearly</option>
+          <option value="once-off">Once-off</option>
+          <option value="as-needed">As needed</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label><i data-lucide="layers" class="icon-sm"></i>Type</label>
+        <select id="f-type">
+          <option value="subscription">Subscription</option>
+          <option value="bill">Bill</option>
+        </select>
+      </div>
     </div>
-    <div class="form-group"><label>Notes</label><input type="text" id="f-notes" placeholder="Optional notes"></div>
-    <button class="btn-save" onclick="saveSub()">Save</button>
-    <button class="btn-delete" id="btn-delete" onclick="deleteSub()" style="display:none;">Delete</button>
-    <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+    <div class="fg">
+      <label><i data-lucide="folder" class="icon-sm"></i>Category</label>
+      <select id="f-category">
+        <option value="">None</option>
+        <option>Software</option><option>Entertainment</option><option>Hosting</option>
+        <option>Internet</option><option>Apps</option><option>Bills</option>
+        <option>Church</option><option>AI</option><option>Domains</option><option>Other</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="fg">
+        <label><i data-lucide="calendar" class="icon-sm"></i>Next Renewal</label>
+        <input type="date" id="f-renewal">
+      </div>
+      <div class="fg">
+        <label><i data-lucide="calendar-check" class="icon-sm"></i>Last Payment</label>
+        <input type="date" id="f-lastpay">
+      </div>
+    </div>
+    <div class="fg">
+      <label><i data-lucide="file-text" class="icon-sm"></i>Notes</label>
+      <input type="text" id="f-notes" placeholder="Optional notes">
+    </div>
+    <div class="divider"></div>
+    <button class="btn-save" onclick="saveSub()">Save Subscription</button>
+    <button class="btn-danger" id="btn-delete" onclick="deleteSub()" style="display:none;">
+      <i data-lucide="trash-2" class="icon-sm"></i>Delete Subscription
+    </button>
+    <button class="btn-ghost" onclick="closeModal()">Cancel</button>
   </div>
 </div>
 
-<!-- TASK MODAL -->
-<div id="tm-overlay" class="modal-overlay" onclick="if(event.target===this)closeTM()">
+<!-- ══════════════════════════════════════════════════
+     TASK MODAL
+══════════════════════════════════════════════════ -->
+<div id="tm-ov" class="modal-ov" onclick="if(event.target===this)closeTM()">
   <div class="modal-box">
-    <h2 id="tm-title">ADD TASK</h2>
-    <div class="form-group"><label>Title</label><input type="text" id="t-title" placeholder="What needs to be done?"></div>
-    <div class="form-row">
-      <div class="form-group"><label>Due Date</label><input type="date" id="t-due"></div>
-      <div class="form-group"><label>Priority</label><select id="t-priority"><option value="high">High</option><option value="medium" selected>Medium</option><option value="low">Low</option></select></div>
+    <div class="modal-handle"></div>
+    <div class="modal-hd">
+      <div class="modal-ttl" id="tm-ttl">ADD TASK</div>
+      <div class="modal-cls" onclick="closeTM()"><i data-lucide="x" class="icon-sm"></i></div>
     </div>
-    <div class="form-group"><label>Notes</label><textarea id="t-notes" placeholder="Optional notes..."></textarea></div>
-    <button class="btn-save" onclick="saveT()">Save</button>
-    <button class="btn-delete" id="tm-btn-del" onclick="delT()" style="display:none;">Delete</button>
-    <button class="btn-cancel" onclick="closeTM()">Cancel</button>
+    <div class="fg">
+      <label><i data-lucide="type" class="icon-sm"></i>Title</label>
+      <input type="text" id="t-title" placeholder="What needs to be done?">
+    </div>
+    <div class="form-row">
+      <div class="fg">
+        <label><i data-lucide="calendar" class="icon-sm"></i>Due Date</label>
+        <input type="date" id="t-due">
+      </div>
+      <div class="fg">
+        <label><i data-lucide="flag" class="icon-sm"></i>Priority</label>
+        <select id="t-priority">
+          <option value="high">High</option>
+          <option value="medium" selected>Medium</option>
+          <option value="low">Low</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="fg">
+        <label><i data-lucide="repeat" class="icon-sm"></i>Recurrence</label>
+        <select id="t-recurrence" onchange="onRecChange()">
+          <option value="none">No Recurrence</option>
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="monthly">Monthly</option>
+        </select>
+      </div>
+      <div class="fg" id="t-rec-end-g">
+        <label><i data-lucide="calendar-x" class="icon-sm"></i>Ends On</label>
+        <input type="date" id="t-rec-end">
+      </div>
+    </div>
+    <div class="fg">
+      <label><i data-lucide="file-text" class="icon-sm"></i>Notes</label>
+      <textarea id="t-notes" placeholder="Optional notes..."></textarea>
+    </div>
+    <div class="divider"></div>
+    <button class="btn-save" onclick="saveT()">Save Task</button>
+    <button class="btn-danger" id="tm-btn-del" onclick="delT()" style="display:none;">
+      <i data-lucide="trash-2" class="icon-sm"></i>Delete Task
+    </button>
+    <button class="btn-ghost" onclick="closeTM()">Cancel</button>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script>
+/* ═══════════════════════════════════════
+   SUPABASE INIT
+═══════════════════════════════════════ */
 const SUPA_URL = 'https://guiacshwxuyvojtgnynf.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1aWFjc2h3eHV5dm9qdGdueW5mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NDQ1MTMsImV4cCI6MjA4ODEyMDUxM30.73JPhyIehnk0hOczkwiP9UH6Yld_eVJYsgnDNcZjWr4';
 const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
 
-let subs = [];
-let editingId = null;
-let currentUser = null;
-let activeCategory = 'All';
-let activeStatusPanel = null;
+/* ═══════════════════════════════════════
+   STATE
+═══════════════════════════════════════ */
+let subs = [], editingId = null, currentUser = null;
+let activeCategory = 'All', activeStatusPanel = null;
+let _tasks = [], _editTid = null, _tFilter = 'open', _collapsed = {};
 
-// ==================== AUTH ====================
+/* ═══════════════════════════════════════
+   ICONS
+═══════════════════════════════════════ */
+function icons() {
+  if (window.lucide) lucide.createIcons({ attrs: { 'stroke-width': '1.75' } });
+}
+
+/* ═══════════════════════════════════════
+   AUTH
+═══════════════════════════════════════ */
 async function doLogin() {
-  const email = document.getElementById('login-email').value;
-  const pw = document.getElementById('login-password').value;
+  const email = document.getElementById('login-email').value.trim();
+  const pw    = document.getElementById('login-password').value;
+  const btn   = document.getElementById('login-btn');
+  btn.textContent = 'Signing in…'; btn.disabled = true;
   const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
+  btn.textContent = 'Sign In'; btn.disabled = false;
   if (error) { document.getElementById('login-error').textContent = error.message; return; }
   currentUser = data.user;
   showApp();
@@ -644,97 +835,201 @@ async function doLogout() {
   currentUser = null;
   document.getElementById('app').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
+  icons();
 }
 
 async function checkSession() {
   const { data: { session } } = await sb.auth.getSession();
   if (session) { currentUser = session.user; showApp(); }
+  else icons();
 }
 
 async function showApp() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
-  await loadSubs();
-  await loadTasks();
+  const email = currentUser?.email || '';
+  document.getElementById('user-email').textContent = email;
+  document.getElementById('user-avt').textContent   = email.charAt(0).toUpperCase();
+  await Promise.all([loadSubs(), loadTasks()]);
+  icons();
 }
 
-// ==================== TABS ====================
+/* ═══════════════════════════════════════
+   TABS
+═══════════════════════════════════════ */
 function switchTab(tab, btn) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
   document.getElementById('app-title').textContent = tab === 'subs' ? 'SUB TRACKER' : 'TASK TRACKER';
+  icons();
 }
 
-// ==================== SUBSCRIPTIONS ====================
+/* ═══════════════════════════════════════
+   SUBSCRIPTIONS — DATA
+═══════════════════════════════════════ */
 async function loadSubs() {
-  const { data, error } = await sb.from('subscriptions').select('*').eq('status', 'active').order('next_renewal', { ascending: true, nullsFirst: false });
+  const { data, error } = await sb
+    .from('subscriptions').select('*')
+    .eq('status','active')
+    .order('next_renewal', { ascending:true, nullsFirst:false });
   if (error) { console.error(error); return; }
   subs = data || [];
-  renderCategoryFilter();
-  render();
+  renderCatFilter();
+  renderSubs();
 }
 
-function getFaviconUrl(name) {
-  const domains = {
-    'learnworlds':'learnworlds.com','obsidian':'obsidian.md','dust':'dust.tt','wix':'wix.com','dashlane':'dashlane.com',
-    'planet fitness':'planetfitness.com','zoom':'zoom.us','genspark':'genspark.ai','memoryos':'memoryos.com',
-    'veed':'veed.io','capcut':'capcut.com','adobe':'adobe.com','vimeo':'vimeo.com','audible':'audible.com',
-    'microsoft':'microsoft.com','xcloud':'xcloud.host','afrihost':'afrihost.com','planning center':'planningcenter.com',
-    'takealot':'takealot.com','secura':'secura.co.za','legalwise':'legalwise.co.za','linkedin':'linkedin.com',
-    'discovery':'discovery.co.za','openart':'openart.ai','openrouter':'openrouter.ai','melon mobile':'melonmobile.com',
-    'netflix':'netflix.com','qustodio':'qustodio.com','shibbolet':'shibbolet.co.za','register domain':'registerdomain.co.za',
-    'runner':'runner.app','jpflorida':'jpflorida.org','jpdallas':'jpdallas.org',
-  };
-  const key = name.toLowerCase();
-  for (const [k, v] of Object.entries(domains)) { if (key.includes(k)) return `https://www.google.com/s2/favicons?domain=${v}&sz=64`; }
+const FAVICONS = {
+  'learnworlds':'learnworlds.com','obsidian':'obsidian.md','dust':'dust.tt','wix':'wix.com',
+  'dashlane':'dashlane.com','planet fitness':'planetfitness.com','zoom':'zoom.us',
+  'genspark':'genspark.ai','memoryos':'memoryos.com','veed':'veed.io','capcut':'capcut.com',
+  'adobe':'adobe.com','vimeo':'vimeo.com','audible':'audible.com','microsoft':'microsoft.com',
+  'xcloud':'xcloud.host','afrihost':'afrihost.com','planning center':'planningcenter.com',
+  'takealot':'takealot.com','secura':'secura.co.za','legalwise':'legalwise.co.za',
+  'linkedin':'linkedin.com','discovery':'discovery.co.za','openart':'openart.ai',
+  'openrouter':'openrouter.ai','melon mobile':'melonmobile.com','netflix':'netflix.com',
+  'qustodio':'qustodio.com','shibbolet':'shibbolet.co.za','runner':'runner.app',
+  'jpflorida':'jpflorida.org','jpdallas':'jpdallas.org','spotify':'spotify.com',
+  'apple':'apple.com','google':'google.com','github':'github.com','notion':'notion.so',
+  'figma':'figma.com','slack':'slack.com','dropbox':'dropbox.com','claude':'anthropic.com',
+  'openai':'openai.com','chatgpt':'openai.com','vercel':'vercel.com','cursor':'cursor.sh',
+};
+function favicon(name) {
+  const k = name.toLowerCase();
+  for (const [n, d] of Object.entries(FAVICONS))
+    if (k.includes(n)) return `https://www.google.com/s2/favicons?domain=${d}&sz=64`;
   return null;
 }
 
-function daysUntil(dateStr) {
-  if (!dateStr) return null;
+function daysUntil(ds) {
+  if (!ds) return null;
   const today = new Date(); today.setHours(0,0,0,0);
-  const target = new Date(dateStr + 'T00:00:00');
-  return Math.ceil((target - today) / 86400000);
+  return Math.ceil((new Date(ds + 'T00:00:00') - today) / 86400000);
+}
+function daysLabel(d) {
+  if (d === null) return { text:'', cls:'ok' };
+  if (d < 0)  return { text: Math.abs(d) + 'd overdue', cls:'overdue' };
+  if (d === 0) return { text:'Due today', cls:'overdue' };
+  if (d === 1) return { text:'Due tomorrow', cls:'soon' };
+  if (d <= 7)  return { text: d + ' days', cls:'soon' };
+  return { text: d + ' days', cls:'ok' };
 }
 
-function daysLabel(days) {
-  if (days === null) return { text: '', cls: 'ok' };
-  if (days < 0) return { text: Math.abs(days) + 'd overdue', cls: 'overdue' };
-  if (days === 0) return { text: 'Due today', cls: 'overdue' };
-  if (days === 1) return { text: 'Due tomorrow', cls: 'soon' };
-  if (days <= 7) return { text: days + ' days', cls: 'soon' };
-  return { text: days + ' days', cls: 'ok' };
-}
+/* ═══════════════════════════════════════
+   SUBSCRIPTIONS — RENDER
+═══════════════════════════════════════ */
+const CAT_ICONS = {
+  All:'grid-3x3',Software:'code-2',Entertainment:'play-circle',Hosting:'server',
+  Internet:'wifi',Apps:'smartphone',Bills:'receipt',Church:'heart',
+  AI:'cpu',Domains:'globe',Other:'more-horizontal'
+};
 
-function renderCategoryFilter() {
+function renderCatFilter() {
   const cats = new Set(['All']);
   subs.forEach(s => { if (s.category) cats.add(s.category); });
-  document.getElementById('category-filter').innerHTML = Array.from(cats).map(c =>
-    '<button class="cat-btn ' + (c === activeCategory ? 'active' : '') + '" onclick="filterCategory(\'' + c + '\')">' + c + '</button>'
-  ).join('');
+  document.getElementById('category-filter').innerHTML = Array.from(cats).map(c => {
+    const ico = CAT_ICONS[c] || 'tag';
+    return `<button class="cat-btn${c===activeCategory?' active':''}" onclick="filterCat('${c}')">
+      <i data-lucide="${ico}" class="icon-sm"></i>${c}</button>`;
+  }).join('');
+  icons();
 }
-
-function filterCategory(cat) { activeCategory = cat; renderCategoryFilter(); render(); }
+function filterCat(c) { activeCategory = c; renderCatFilter(); renderSubs(); }
 
 function getStatusGroups() {
   const today = new Date(); today.setHours(0,0,0,0);
-  const in7 = new Date(today); in7.setDate(in7.getDate() + 7);
-  let overdue = [], soon = [];
+  const in7 = new Date(today); in7.setDate(in7.getDate()+7);
+  const ov=[], sn=[];
   subs.forEach(s => {
     if (!s.next_renewal) return;
-    const r = new Date(s.next_renewal + 'T00:00:00');
-    if (r < today) overdue.push(s);
-    else if (r <= in7) soon.push(s);
+    const r = new Date(s.next_renewal+'T00:00:00');
+    if (r < today) ov.push(s); else if (r <= in7) sn.push(s);
   });
-  return { overdue, soon };
+  return { overdue:ov, soon:sn };
+}
+
+function renderSubs() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const in7  = new Date(today); in7.setDate(in7.getDate()+7);
+  const in14 = new Date(today); in14.setDate(in14.getDate()+14);
+  const list = activeCategory === 'All' ? subs : subs.filter(s => s.category === activeCategory);
+  let ov=[], wk=[], up=[], ac=[], bi=[];
+  list.forEach(s => {
+    const r = s.next_renewal ? new Date(s.next_renewal+'T00:00:00') : null;
+    if (s.type==='bill') { if (r&&r<today) ov.push(s); else bi.push(s); }
+    else if (r&&r<today) ov.push(s);
+    else if (r&&r<=in7)  wk.push(s);
+    else if (r&&r<=in14) up.push(s);
+    else ac.push(s);
+  });
+
+  const section = (title, items, cls, ico) => {
+    if (!items.length) return '';
+    return `<div class="sec-title ${cls}"><i data-lucide="${ico}" class="icon-sm"></i>${title}</div>`
+      + items.map(subCard).join('');
+  };
+
+  let html = section('OVERDUE', ov, 't-danger', 'alert-circle')
+    + section('DUE THIS WEEK', wk, 't-warn', 'clock')
+    + section('DUE NEXT 14 DAYS', up, 't-warn', 'calendar')
+    + section('SUBSCRIPTIONS', ac, 't-ok', 'check-circle')
+    + section('BILLS', bi, 't-blue', 'receipt');
+
+  if (!list.length) html = `<div class="empty-state">
+    <div class="empty-ico"><i data-lucide="credit-card" class="icon-xl"></i></div>
+    <p>No subscriptions yet — tap + to add one.</p></div>`;
+
+  document.getElementById('sub-list').innerHTML = html;
+  updateTotals();
+  renderStatusCards();
+  icons();
+}
+
+function subCard(s) {
+  const amt = s.amount ? (s.currency==='USD'?'$':'R')+parseFloat(s.amount).toFixed(2) : '';
+  const cyc = s.cycle==='monthly'?'/mo':s.cycle==='yearly'?'/yr':'';
+  const dl  = daysLabel(daysUntil(s.next_renewal));
+  const fav = favicon(s.name);
+  const ico = fav
+    ? `<img src="${fav}" onerror="this.parentElement.innerHTML='<span class=fb>${s.name.charAt(0).toUpperCase()}</span>'">`
+    : `<span class="fb">${s.name.charAt(0).toUpperCase()}</span>`;
+  const cat = s.category ? `<span class="cat-pill">${s.category}</span>` : '';
+  const cls = dl.cls==='overdue'?'c-overdue':dl.cls==='soon'?'c-soon':'';
+  const sico = dl.cls==='overdue'?'alert-circle':dl.cls==='soon'?'clock':'';
+  const statusHtml = dl.text
+    ? `<div class="sub-status ${dl.cls}">${sico?`<i data-lucide="${sico}" class="icon-sm"></i>`:''}${dl.text}</div>` : '';
+
+  return `<div class="sub-card ${cls}" onclick="openEdit('${s.id}')">
+    <div class="sub-ico">${ico}</div>
+    <div class="sub-left">
+      <div class="sub-name">${s.name}</div>
+      <div class="sub-row2">${cat}</div>
+      ${statusHtml}
+    </div>
+    <div class="sub-right">
+      ${amt ? `<div class="sub-amt">${amt}</div><div class="sub-cyc">${cyc}</div>`
+            : `<div style="color:var(--t3)">—</div>`}
+    </div>
+  </div>`;
+}
+
+function updateTotals() {
+  let zar=0, usd=0;
+  subs.forEach(s => {
+    if (!s.amount) return;
+    const a = parseFloat(s.amount);
+    const m = s.cycle==='yearly'?a/12:s.cycle==='monthly'?a:0;
+    if (s.currency==='ZAR') zar+=m; else if (s.currency==='USD') usd+=m;
+  });
+  document.getElementById('total-zar').textContent = 'R'+Math.round(zar).toLocaleString();
+  document.getElementById('total-usd').textContent = '$'+Math.round(usd).toLocaleString();
 }
 
 function renderStatusCards() {
   const { overdue, soon } = getStatusGroups();
   document.getElementById('overdue-count').textContent = overdue.length;
-  document.getElementById('soon-count').textContent = soon.length;
+  document.getElementById('soon-count').textContent    = soon.length;
 }
 
 function toggleStatusDetail(type) {
@@ -742,358 +1037,339 @@ function toggleStatusDetail(type) {
   if (activeStatusPanel === type) { panel.classList.remove('show'); activeStatusPanel = null; return; }
   activeStatusPanel = type;
   const { overdue, soon } = getStatusGroups();
-  const items = type === 'overdue' ? overdue : soon;
-  document.getElementById('status-detail-title').textContent = type === 'overdue' ? 'OVERDUE' : 'DUE THIS WEEK';
-  let html = '';
-  if (!items.length) { html = '<div style="padding:10px 0;color:#888;font-size:15px;">None</div>'; }
-  else { items.forEach(s => {
-    const amt = s.amount ? (s.currency === 'USD' ? '$' : 'R') + parseFloat(s.amount).toFixed(2) : '—';
-    const dl = daysLabel(daysUntil(s.next_renewal));
-    html += '<div class="status-item"><div class="status-item-name">' + s.name + '</div><div class="status-item-info"><div class="status-item-amount">' + amt + '</div><div class="status-item-days ' + dl.cls + '">' + dl.text + '</div></div></div>';
-  }); }
-  document.getElementById('status-detail-list').innerHTML = html;
+  const items = type==='overdue' ? overdue : soon;
+  document.getElementById('sd-title').textContent = type==='overdue' ? 'OVERDUE' : 'DUE THIS WEEK';
+  let html = !items.length
+    ? `<div style="padding:16px 18px;color:var(--t3);font-size:14px">None</div>`
+    : items.map(s => {
+        const amt = s.amount?(s.currency==='USD'?'$':'R')+parseFloat(s.amount).toFixed(2):'—';
+        const dl  = daysLabel(daysUntil(s.next_renewal));
+        return `<div class="sd-item">
+          <div class="sd-name">${s.name}</div>
+          <div><div class="sd-amt">${amt}</div><div class="sd-days ${dl.cls}">${dl.text}</div></div>
+        </div>`;
+      }).join('');
+  document.getElementById('sd-list').innerHTML = html;
   panel.classList.add('show');
 }
 
-function render() {
-  const today = new Date(); today.setHours(0,0,0,0);
-  const in7 = new Date(today); in7.setDate(in7.getDate() + 7);
-  const in14 = new Date(today); in14.setDate(in14.getDate() + 14);
-  const filtered = activeCategory === 'All' ? subs : subs.filter(s => s.category === activeCategory);
-  let overdue = [], thisWeek = [], upcoming = [], active = [], bills = [];
-  filtered.forEach(s => {
-    const r = s.next_renewal ? new Date(s.next_renewal + 'T00:00:00') : null;
-    if (s.type === 'bill') { if (r && r < today) overdue.push(s); else bills.push(s); }
-    else if (r && r < today) overdue.push(s);
-    else if (r && r <= in7) thisWeek.push(s);
-    else if (r && r <= in14) upcoming.push(s);
-    else active.push(s);
-  });
-  let html = '';
-  if (overdue.length) { html += '<div class="section-title">OVERDUE</div>'; overdue.forEach(s => html += subCard(s)); }
-  if (thisWeek.length) { html += '<div class="section-title upcoming">DUE THIS WEEK</div>'; thisWeek.forEach(s => html += subCard(s)); }
-  if (upcoming.length) { html += '<div class="section-title upcoming">DUE NEXT 14 DAYS</div>'; upcoming.forEach(s => html += subCard(s)); }
-  if (active.length) { html += '<div class="section-title active">SUBSCRIPTIONS</div>'; active.forEach(s => html += subCard(s)); }
-  if (bills.length) { html += '<div class="section-title bills">BILLS</div>'; bills.forEach(s => html += subCard(s)); }
-  if (!filtered.length) html = '<div class="empty-state">No subscriptions yet. Tap + to add one.</div>';
-  document.getElementById('sub-list').innerHTML = html;
-  updateTotals();
-  renderStatusCards();
-}
-
-function subCard(s) {
-  const amt = s.amount ? (s.currency === 'USD' ? '$' : 'R') + parseFloat(s.amount).toFixed(2) : '';
-  const cyc = s.cycle === 'monthly' ? '/mo' : s.cycle === 'yearly' ? '/yr' : '';
-  const dl = daysLabel(daysUntil(s.next_renewal));
-  const favicon = getFaviconUrl(s.name);
-  const iconHtml = favicon
-    ? '<img src="' + favicon + '" onerror="this.parentElement.innerHTML=\'<span class=fallback>' + s.name.charAt(0).toUpperCase() + '</span>\'">'
-    : '<span class="fallback">' + s.name.charAt(0).toUpperCase() + '</span>';
-  const catHtml = s.category ? '<div class="sub-category">' + s.category + '</div>' : '';
-  return '<div class="sub-card" onclick="openEdit(\'' + s.id + '\')">' +
-    '<div class="sub-icon">' + iconHtml + '</div>' +
-    '<div class="sub-left"><div class="sub-name">' + s.name + '</div><div class="sub-days ' + dl.cls + '">' + dl.text + '</div>' + catHtml + '</div>' +
-    '<div class="sub-right">' + (amt ? '<div class="sub-amount">' + amt + '</div><div class="sub-cycle">' + cyc + '</div>' : '<div class="sub-unknown">—</div>') + '</div></div>';
-}
-
-function updateTotals() {
-  let zar = 0, usd = 0;
-  subs.forEach(s => {
-    if (!s.amount) return;
-    const amt = parseFloat(s.amount);
-    const monthly = s.cycle === 'yearly' ? amt / 12 : s.cycle === 'monthly' ? amt : 0;
-    if (s.currency === 'ZAR') zar += monthly;
-    else if (s.currency === 'USD') usd += monthly;
-  });
-  document.getElementById('total-zar').textContent = 'R' + Math.round(zar);
-  document.getElementById('total-usd').textContent = '$' + Math.round(usd);
-}
-
-// SUB MODAL
+/* ── Sub Modal ── */
 function openModal() {
   editingId = null;
-  document.getElementById('modal-title').textContent = 'ADD SUBSCRIPTION';
+  document.getElementById('modal-ttl').textContent = 'ADD SUBSCRIPTION';
   ['f-name','f-notes'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('f-amount').value = '';
+  document.getElementById('f-amount').value  = '';
   document.getElementById('f-currency').value = 'ZAR';
-  document.getElementById('f-cycle').value = 'monthly';
-  document.getElementById('f-type').value = 'subscription';
+  document.getElementById('f-cycle').value   = 'monthly';
+  document.getElementById('f-type').value    = 'subscription';
   document.getElementById('f-category').value = '';
   document.getElementById('f-renewal').value = '';
   document.getElementById('f-lastpay').value = '';
   document.getElementById('btn-delete').style.display = 'none';
-  document.getElementById('modal-overlay').classList.add('show');
+  document.getElementById('modal-ov').classList.add('show');
+  icons();
 }
-
 function openEdit(id) {
-  const s = subs.find(x => x.id === id);
-  if (!s) return;
+  const s = subs.find(x => x.id===id); if (!s) return;
   editingId = id;
-  document.getElementById('modal-title').textContent = 'EDIT SUBSCRIPTION';
-  document.getElementById('f-name').value = s.name;
-  document.getElementById('f-amount').value = s.amount || '';
-  document.getElementById('f-currency').value = s.currency || 'ZAR';
-  document.getElementById('f-cycle').value = s.cycle || 'monthly';
-  document.getElementById('f-type').value = s.type || 'subscription';
-  document.getElementById('f-category').value = s.category || '';
-  document.getElementById('f-renewal').value = s.next_renewal || '';
-  document.getElementById('f-lastpay').value = s.last_payment || '';
-  document.getElementById('f-notes').value = s.notes || '';
-  document.getElementById('btn-delete').style.display = 'block';
-  document.getElementById('modal-overlay').classList.add('show');
+  document.getElementById('modal-ttl').textContent = 'EDIT SUBSCRIPTION';
+  document.getElementById('f-name').value     = s.name;
+  document.getElementById('f-amount').value   = s.amount||'';
+  document.getElementById('f-currency').value = s.currency||'ZAR';
+  document.getElementById('f-cycle').value    = s.cycle||'monthly';
+  document.getElementById('f-type').value     = s.type||'subscription';
+  document.getElementById('f-category').value = s.category||'';
+  document.getElementById('f-renewal').value  = s.next_renewal||'';
+  document.getElementById('f-lastpay').value  = s.last_payment||'';
+  document.getElementById('f-notes').value    = s.notes||'';
+  document.getElementById('btn-delete').style.display = 'flex';
+  document.getElementById('modal-ov').classList.add('show');
+  icons();
 }
-
-function closeModal() { document.getElementById('modal-overlay').classList.remove('show'); editingId = null; }
+function closeModal() { document.getElementById('modal-ov').classList.remove('show'); editingId=null; }
 
 async function saveSub() {
   const obj = {
-    name: document.getElementById('f-name').value.trim(),
-    amount: document.getElementById('f-amount').value ? parseFloat(document.getElementById('f-amount').value) : null,
-    currency: document.getElementById('f-currency').value,
-    cycle: document.getElementById('f-cycle').value,
-    type: document.getElementById('f-type').value,
-    category: document.getElementById('f-category').value || null,
-    next_renewal: document.getElementById('f-renewal').value || null,
-    last_payment: document.getElementById('f-lastpay').value || null,
-    notes: document.getElementById('f-notes').value.trim(),
-    status: 'active',
-    user_id: currentUser.id
+    name:         document.getElementById('f-name').value.trim(),
+    amount:       document.getElementById('f-amount').value ? parseFloat(document.getElementById('f-amount').value) : null,
+    currency:     document.getElementById('f-currency').value,
+    cycle:        document.getElementById('f-cycle').value,
+    type:         document.getElementById('f-type').value,
+    category:     document.getElementById('f-category').value||null,
+    next_renewal: document.getElementById('f-renewal').value||null,
+    last_payment: document.getElementById('f-lastpay').value||null,
+    notes:        document.getElementById('f-notes').value.trim(),
+    status:       'active',
+    user_id:      currentUser.id,
   };
   if (!obj.name) return;
-  let error;
-  if (editingId) { ({ error } = await sb.from('subscriptions').update(obj).eq('id', editingId)); }
-  else { ({ error } = await sb.from('subscriptions').insert(obj)); }
-  if (error) { console.error(error); alert('Error: ' + error.message); return; }
-  closeModal();
-  await loadSubs();
+  const { error } = editingId
+    ? await sb.from('subscriptions').update(obj).eq('id',editingId)
+    : await sb.from('subscriptions').insert(obj);
+  if (error) { alert('Error: '+error.message); return; }
+  closeModal(); await loadSubs();
 }
-
 async function deleteSub() {
-  if (!editingId || !confirm('Delete this subscription?')) return;
-  const { error } = await sb.from('subscriptions').delete().eq('id', editingId);
+  if (!editingId||!confirm('Delete this subscription?')) return;
+  const { error } = await sb.from('subscriptions').delete().eq('id',editingId);
   if (error) { console.error(error); return; }
-  closeModal();
-  await loadSubs();
+  closeModal(); await loadSubs();
 }
 
-// ==================== TASKS ====================
-let _tasks = [], _editTid = null, _tStatusFilter = 'open';
-let _collapsedGroups = {};
-
+/* ═══════════════════════════════════════
+   TASKS — DATA
+═══════════════════════════════════════ */
 async function loadTasks() {
-  const { data, error } = await sb.from('tasks').select('*').order('created_at', { ascending: false });
+  const { data, error } = await sb.from('tasks').select('*').order('created_at',{ascending:false});
   if (error) { console.error(error); return; }
-  _tasks = data || [];
+  _tasks = data||[];
   renderT();
 }
 
-
-
-function toggleTaskStatusFilter(type) {
-  if (_tStatusFilter === type) { _tStatusFilter = 'open'; }
-  else { _tStatusFilter = type; }
-  renderT();
-}
-
-function _tDateKey(ds) {
+function tDateKey(ds) {
   if (!ds) return 'no-date';
-  const d = new Date(ds + 'T00:00:00');
+  const d   = new Date(ds+'T00:00:00');
   const now = new Date(); now.setHours(0,0,0,0);
-  const diff = Math.round((d - now) / 86400000);
+  const diff = Math.round((d-now)/86400000);
   if (diff < 0) return 'overdue';
   if (diff === 0) return 'today';
-  const dayOfWeek = now.getDay(); // 0=Sun
-  const daysToEndOfWeek = 7 - dayOfWeek;
-  if (diff <= daysToEndOfWeek) return 'this-week';
-  if (diff <= daysToEndOfWeek + 7) return 'next-week';
+  const endWk = 7 - now.getDay();
+  if (diff <= endWk) return 'this-week';
+  if (diff <= endWk+7) return 'next-week';
   return 'upcoming';
 }
-
-function _tDateDisplay(ds) {
+function tDateDisp(ds) {
   if (!ds) return '';
-  const d = new Date(ds + 'T00:00:00');
+  const d   = new Date(ds+'T00:00:00');
   const now = new Date(); now.setHours(0,0,0,0);
-  const diff = Math.round((d - now) / 86400000);
-  if (diff < -1) return Math.abs(diff) + 'd overdue';
-  if (diff === -1) return 'Yesterday';
-  if (diff === 0) return 'Today';
-  if (diff === 1) return 'Tomorrow';
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  return d.getDate() + ' ' + months[d.getMonth()];
+  const diff = Math.round((d-now)/86400000);
+  if (diff<-1) return Math.abs(diff)+'d overdue';
+  if (diff===-1) return 'Yesterday';
+  if (diff===0)  return 'Today';
+  if (diff===1)  return 'Tomorrow';
+  const mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return d.getDate()+' '+mo[d.getMonth()];
+}
+
+function toggleTaskFilter(type) {
+  _tFilter = _tFilter===type ? 'open' : type;
+  renderT();
 }
 
 function toggleGroup(key) {
-  _collapsedGroups[key] = !_collapsedGroups[key];
-  const items = document.getElementById('tg-items-' + key);
-  const chevron = document.getElementById('tg-chev-' + key);
-  if (_collapsedGroups[key]) { items.classList.add('collapsed'); chevron.classList.remove('open'); }
-  else { items.classList.remove('collapsed'); chevron.classList.add('open'); }
+  _collapsed[key] = !_collapsed[key];
+  const el  = document.getElementById('tg-items-'+key);
+  const chv = document.getElementById('tg-chev-'+key);
+  if (el)  el.classList.toggle('collapsed', _collapsed[key]);
+  if (chv) chv.classList.toggle('open', !_collapsed[key]);
 }
 
+/* ═══════════════════════════════════════
+   TASKS — RENDER
+═══════════════════════════════════════ */
 function renderT() {
-  // Update stat cards
-  const openCount = _tasks.filter(t => t.status !== 'done').length;
-  const overdueTaskCount = _tasks.filter(t => t.status !== 'done' && t.due_date && _tDateKey(t.due_date) === 'overdue').length;
-  document.getElementById('task-open-count').textContent = openCount;
-  document.getElementById('task-overdue-count').textContent = overdueTaskCount;
+  const open = _tasks.filter(t=>t.status!=='done').length;
+  const ovd  = _tasks.filter(t=>t.status!=='done'&&t.due_date&&tDateKey(t.due_date)==='overdue').length;
+  document.getElementById('task-open-cnt').textContent    = open;
+  document.getElementById('task-overdue-cnt').textContent = ovd;
+  document.getElementById('task-card-open').classList.toggle('active-filter',   _tFilter==='open');
+  document.getElementById('task-card-overdue').classList.toggle('active-filter', _tFilter==='overdue');
 
-  // Active filter highlight
-  document.getElementById('task-card-open').classList.toggle('active-filter', _tStatusFilter === 'open');
-  document.getElementById('task-card-overdue').classList.toggle('active-filter', _tStatusFilter === 'overdue');
-  document.getElementById('task-card-open').classList.toggle('active-filter', _tStatusFilter === 'open');
-
-  // Filter tasks
   let filtered = _tasks.filter(t => {
-    if (_tStatusFilter === 'open') return t.status !== 'done';
-    if (_tStatusFilter === 'overdue') return t.status !== 'done' && t.due_date && _tDateKey(t.due_date) === 'overdue';
+    if (_tFilter==='open')    return t.status!=='done';
+    if (_tFilter==='overdue') return t.status!=='done'&&t.due_date&&tDateKey(t.due_date)==='overdue';
     return true;
   });
 
-
-
   if (!filtered.length) {
-    const msg = _tStatusFilter === 'overdue' ? 'No overdue tasks.' : 'All clear.';
-    document.getElementById('task-container').innerHTML = '<div class="empty-tasks"><h3>' + (_tStatusFilter === 'overdue' ? 'ALL GOOD' : 'ALL CLEAR') + '</h3><p>' + msg + '</p></div>';
-    return;
+    document.getElementById('task-container').innerHTML = `
+      <div class="empty-tasks">
+        <div class="empty-tasks-ico"><i data-lucide="${_tFilter==='overdue'?'check-circle':'check-square'}" class="icon-xl"></i></div>
+        <h3>${_tFilter==='overdue'?'ALL GOOD':'ALL CLEAR'}</h3>
+        <p>${_tFilter==='overdue'?'No overdue tasks.':'All tasks are done.'}</p>
+      </div>`;
+    icons(); return;
   }
 
-  // Group tasks
-  const groupOrder = [
-        { key: 'overdue', label: 'OVERDUE', cls: 'overdue' },
-        { key: 'today', label: 'TODAY', cls: 'today' },
-        { key: 'this-week', label: 'THIS WEEK', cls: 'this-week' },
-        { key: 'next-week', label: 'NEXT WEEK', cls: 'next-week' },
-        { key: 'upcoming', label: 'UPCOMING', cls: 'upcoming-g' },
-        { key: 'no-date', label: 'NO DATE', cls: 'no-date' }
-      ];
-
-  const groups = {};
-  filtered.forEach(t => {
-    const k = _tDateKey(t.due_date);
-    if (!groups[k]) groups[k] = [];
-    groups[k].push(t);
-  });
-
-  // Sort within groups: high > medium > low, then by due date
-  const prioVal = { high: 0, medium: 1, low: 2 };
-  Object.values(groups).forEach(arr => arr.sort((a, b) => {
-    const pa = prioVal[a.priority] ?? 1, pb = prioVal[b.priority] ?? 1;
-    if (pa !== pb) return pa - pb;
-    if (a.due_date && b.due_date) return a.due_date.localeCompare(b.due_date);
-    if (a.due_date) return -1;
-    if (b.due_date) return 1;
-    return 0;
+  const GRP_ORDER = [
+    { key:'overdue',   label:'OVERDUE',    cls:'overdue',   ico:'alert-circle' },
+    { key:'today',     label:'TODAY',      cls:'today',     ico:'sun' },
+    { key:'this-week', label:'THIS WEEK',  cls:'this-week', ico:'calendar' },
+    { key:'next-week', label:'NEXT WEEK',  cls:'next-week', ico:'calendar' },
+    { key:'upcoming',  label:'UPCOMING',   cls:'upcoming',  ico:'clock' },
+    { key:'no-date',   label:'NO DATE',    cls:'no-date',   ico:'minus-circle' },
+  ];
+  const grps = {};
+  filtered.forEach(t => { const k=tDateKey(t.due_date); (grps[k]=grps[k]||[]).push(t); });
+  const pv = {high:0,medium:1,low:2};
+  Object.values(grps).forEach(arr => arr.sort((a,b)=>{
+    const pa=pv[a.priority]??1, pb=pv[b.priority]??1;
+    if (pa!==pb) return pa-pb;
+    if (a.due_date&&b.due_date) return a.due_date.localeCompare(b.due_date);
+    return a.due_date?-1:b.due_date?1:0;
   }));
 
   let html = '';
-  groupOrder.forEach(g => {
-    const items = groups[g.key];
-    if (!items || !items.length) return;
-    const isCollapsed = _collapsedGroups[g.key] || false;
-    html += '<div class="task-group">';
-    html += '<div class="task-group-header" onclick="toggleGroup(\'' + g.key + '\')">';
-    html += '<span class="task-group-label ' + g.cls + '">' + g.label + '</span>';
-    html += '<div class="task-group-meta"><span class="task-group-count">' + items.length + '</span>';
-    html += '<span class="task-group-chevron ' + (isCollapsed ? '' : 'open') + '" id="tg-chev-' + g.key + '">▼</span></div></div>';
-    html += '<div class="task-group-items ' + (isCollapsed ? 'collapsed' : '') + '" id="tg-items-' + g.key + '" style="max-height:' + (isCollapsed ? '0' : (items.length * 100)) + 'px">';
-    items.forEach(t => html += taskCard(t));
-    html += '</div></div>';
+  GRP_ORDER.forEach(g => {
+    const items = grps[g.key]; if (!items?.length) return;
+    const coll = !!_collapsed[g.key];
+    html += `<div class="task-group">
+      <div class="tg-head" onclick="toggleGroup('${g.key}')">
+        <div class="tg-left">
+          <i data-lucide="${g.ico}" class="icon-sm" style="color:var(--t3)"></i>
+          <span class="tg-lbl ${g.cls}">${g.label}</span>
+        </div>
+        <div class="tg-meta">
+          <span class="tg-cnt">${items.length}</span>
+          <span class="tg-chev${coll?'':' open'}" id="tg-chev-${g.key}">
+            <i data-lucide="chevron-down" class="icon-sm"></i>
+          </span>
+        </div>
+      </div>
+      <div class="tg-items${coll?' collapsed':''}" id="tg-items-${g.key}" style="max-height:${coll?'0':items.length*140+60}px">
+        ${items.map(taskCard).join('')}
+      </div>
+    </div>`;
   });
-
   document.getElementById('task-container').innerHTML = html;
+  icons();
 }
 
 function taskCard(t) {
-  const isDone = t.status === 'done';
-  const isOverdue = !isDone && t.due_date && _tDateKey(t.due_date) === 'overdue';
-  const dateDisp = _tDateDisplay(t.due_date);
-  const dateCls = isOverdue ? 'overdue' : '';
-  const cardCls = isOverdue ? ' overdue-card' : '';
+  const done    = t.status==='done';
+  const ovd     = !done&&t.due_date&&tDateKey(t.due_date)==='overdue';
+  const today   = !done&&t.due_date&&tDateKey(t.due_date)==='today';
+  const dateTxt = tDateDisp(t.due_date);
+  const dateCls = ovd?'overdue':today?'today':'';
+  const rec     = t.recurrence||'none';
+  const recLbl  = {daily:'Daily',weekly:'Weekly',monthly:'Monthly'};
+  const recBadge = rec!=='none'&&!done
+    ? `<span class="rec-badge"><i data-lucide="repeat" class="icon-sm"></i>${recLbl[rec]}</span>` : '';
 
-  let html = '<div class="task-card' + cardCls + '" onclick="openTEdit(\'' + t.id + '\')">';
-  html += '<div class="task-check ' + (isDone ? 'checked' : '') + '" onclick="event.stopPropagation();toggleTC(\'' + t.id + '\')"></div>';
-  html += '<div class="task-content">';
-  html += '<div class="task-title"' + (isDone ? ' style="text-decoration:line-through;opacity:0.5"' : '') + '>' + t.title + '</div>';
-  html += '<div class="task-meta">';
-  if (t.priority) html += '<span class="priority-dot ' + t.priority + '"></span>';
-  if (dateDisp) html += '<span class="task-date ' + dateCls + '">' + dateDisp + '</span>';
-  html += '</div>';
-  if (t.notes && !isDone) html += '<div class="task-notes-preview">' + t.notes + '</div>';
-  html += '</div></div>';
-  return html;
+  return `<div class="task-card${ovd?' c-overdue':''}" onclick="openTEdit('${t.id}')">
+    <div class="t-chk${done?' checked':''}" onclick="event.stopPropagation();toggleTC('${t.id}')"></div>
+    <div class="t-body">
+      <div class="t-title${done?' done':''}">${t.title}</div>
+      <div class="t-meta">
+        ${t.priority?`<span class="prio-dot ${t.priority}"></span>`:''}
+        ${dateTxt?`<span class="t-date ${dateCls}">${dateTxt}</span>`:''}
+        ${recBadge}
+      </div>
+      ${t.notes&&!done?`<div class="t-notes-pre">${t.notes}</div>`:''}
+    </div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════
+   RECURRING LOGIC
+═══════════════════════════════════════ */
+function nextDue(ds, rec) {
+  if (!ds||!rec||rec==='none') return null;
+  const d = new Date(ds+'T00:00:00');
+  if (rec==='daily')   d.setDate(d.getDate()+1);
+  if (rec==='weekly')  d.setDate(d.getDate()+7);
+  if (rec==='monthly') d.setMonth(d.getMonth()+1);
+  return d.toISOString().split('T')[0];
 }
 
 async function toggleTC(id) {
-  const t = _tasks.find(x => x.id === id);
-  if (!t) return;
-  const newStatus = t.status === 'done' ? 'open' : 'done';
-  const updates = { status: newStatus };
-  if (newStatus === 'done') updates.completed_at = new Date().toISOString();
-  else updates.completed_at = null;
-  const { error } = await sb.from('tasks').update(updates).eq('id', id);
+  const t = _tasks.find(x=>x.id===id); if (!t) return;
+  const ns = t.status==='done'?'open':'done';
+  const upd = { status:ns, completed_at: ns==='done'?new Date().toISOString():null };
+  const { error } = await sb.from('tasks').update(upd).eq('id',id);
   if (error) { console.error(error); return; }
-  t.status = newStatus;
-  t.completed_at = updates.completed_at;
+  t.status = ns; t.completed_at = upd.completed_at;
+
+  if (ns==='done' && t.recurrence && t.recurrence!=='none') {
+    const nd = nextDue(t.due_date, t.recurrence);
+    if (nd && (!t.recurrence_end || nd <= t.recurrence_end)) {
+      const newTask = {
+        title:         t.title,
+        due_date:      nd,
+        priority:      t.priority,
+        notes:         t.notes,
+        recurrence:    t.recurrence,
+        recurrence_end:t.recurrence_end||null,
+        parent_task_id:t.parent_task_id||t.id,
+        status:        'open',
+        user_id:       currentUser.id,
+      };
+      const { error: ie } = await sb.from('tasks').insert(newTask);
+      if (ie) console.error('Recurring insert error:', ie);
+      await loadTasks(); return;
+    }
+  }
   renderT();
 }
 
-// TASK MODAL
+/* ── Task Modal ── */
+function onRecChange() {
+  const v = document.getElementById('t-recurrence').value;
+  document.getElementById('t-rec-end-g').classList.toggle('show', v!=='none');
+  icons();
+}
+
 function openTM() {
   _editTid = null;
-  document.getElementById('tm-title').textContent = 'ADD TASK';
-  document.getElementById('t-title').value = '';
-  document.getElementById('t-due').value = '';
+  document.getElementById('tm-ttl').textContent = 'ADD TASK';
+  document.getElementById('t-title').value    = '';
+  document.getElementById('t-due').value      = '';
   document.getElementById('t-priority').value = 'medium';
-  document.getElementById('t-notes').value = '';
+  document.getElementById('t-notes').value    = '';
+  document.getElementById('t-recurrence').value = 'none';
+  document.getElementById('t-rec-end').value  = '';
+  document.getElementById('t-rec-end-g').classList.remove('show');
   document.getElementById('tm-btn-del').style.display = 'none';
-  document.getElementById('tm-overlay').classList.add('show');
+  document.getElementById('tm-ov').classList.add('show');
+  icons();
+  setTimeout(() => document.getElementById('t-title').focus(), 120);
 }
 
 function openTEdit(id) {
-  const t = _tasks.find(x => x.id === id);
-  if (!t) return;
+  const t = _tasks.find(x=>x.id===id); if (!t) return;
   _editTid = id;
-  document.getElementById('tm-title').textContent = 'EDIT TASK';
-  document.getElementById('t-title').value = t.title || '';
-  document.getElementById('t-due').value = t.due_date || '';
-  document.getElementById('t-priority').value = t.priority || 'medium';
-  document.getElementById('t-notes').value = t.notes || '';
-  document.getElementById('tm-btn-del').style.display = 'block';
-  document.getElementById('tm-overlay').classList.add('show');
+  document.getElementById('tm-ttl').textContent   = 'EDIT TASK';
+  document.getElementById('t-title').value        = t.title||'';
+  document.getElementById('t-due').value          = t.due_date||'';
+  document.getElementById('t-priority').value     = t.priority||'medium';
+  document.getElementById('t-notes').value        = t.notes||'';
+  document.getElementById('t-recurrence').value   = t.recurrence||'none';
+  document.getElementById('t-rec-end').value      = t.recurrence_end||'';
+  document.getElementById('t-rec-end-g').classList.toggle('show', !!(t.recurrence&&t.recurrence!=='none'));
+  document.getElementById('tm-btn-del').style.display = 'flex';
+  document.getElementById('tm-ov').classList.add('show');
+  icons();
 }
-
-function closeTM() { document.getElementById('tm-overlay').classList.remove('show'); _editTid = null; }
+function closeTM() { document.getElementById('tm-ov').classList.remove('show'); _editTid=null; }
 
 async function saveT() {
+  const title = document.getElementById('t-title').value.trim();
+  if (!title) return;
   const obj = {
-    title: document.getElementById('t-title').value.trim(),
-    due_date: document.getElementById('t-due').value || null,
-    priority: document.getElementById('t-priority').value,
-    notes: document.getElementById('t-notes').value.trim() || null,
-    user_id: currentUser.id
+    title,
+    due_date:      document.getElementById('t-due').value||null,
+    priority:      document.getElementById('t-priority').value,
+    notes:         document.getElementById('t-notes').value.trim()||null,
+    recurrence:    document.getElementById('t-recurrence').value||'none',
+    recurrence_end:document.getElementById('t-rec-end').value||null,
+    user_id:       currentUser.id,
   };
-  if (!obj.title) return;
-  let error;
-  if (_editTid) {
-    ({ error } = await sb.from('tasks').update(obj).eq('id', _editTid));
-  } else {
-    obj.status = 'open';
-    ({ error } = await sb.from('tasks').insert(obj));
-  }
-  if (error) { console.error(error); alert('Error: ' + error.message); return; }
-  closeTM();
-  await loadTasks();
+  const { error } = _editTid
+    ? await sb.from('tasks').update(obj).eq('id',_editTid)
+    : await sb.from('tasks').insert({ ...obj, status:'open' });
+  if (error) { alert('Error: '+error.message); return; }
+  closeTM(); await loadTasks();
 }
-
 async function delT() {
-  if (!_editTid || !confirm('Delete this task?')) return;
-  const { error } = await sb.from('tasks').delete().eq('id', _editTid);
+  if (!_editTid||!confirm('Delete this task?')) return;
+  const { error } = await sb.from('tasks').delete().eq('id',_editTid);
   if (error) { console.error(error); return; }
-  closeTM();
-  await loadTasks();
+  closeTM(); await loadTasks();
 }
 
-// ==================== INIT ====================
+/* ═══════════════════════════════════════
+   BOOT
+═══════════════════════════════════════ */
 checkSession();
 </script>
 </body>
