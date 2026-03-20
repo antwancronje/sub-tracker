@@ -530,6 +530,38 @@ body::before{
 .empty-tasks h3{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;color:var(--t3);margin-bottom:8px;letter-spacing:2px}
 .empty-tasks p{font-size:14px}
 
+/* ─── MIGRATION BANNER ───────────────────────────────────────── */
+#migration-banner{
+  display:none;
+  background:rgba(245,158,11,.09);
+  border:1px solid rgba(245,158,11,.28);
+  border-radius:var(--r2);
+  padding:14px 18px;
+  margin-bottom:20px;
+  gap:12px;
+  align-items:flex-start;
+  animation:slideUp .25s ease;
+}
+#migration-banner.show{display:flex}
+#migration-banner .mb-ico{color:var(--warn);flex-shrink:0;margin-top:1px}
+#migration-banner .mb-body{flex:1;min-width:0}
+#migration-banner .mb-title{font-size:13px;font-weight:600;color:var(--warn);margin-bottom:4px}
+#migration-banner .mb-text{font-size:12px;color:var(--t2);line-height:1.6}
+#migration-banner code{
+  display:block;margin-top:8px;padding:10px 12px;
+  background:rgba(0,0,0,.4);border-radius:var(--r1);
+  font-size:11px;color:#a5f3a5;font-family:monospace;
+  white-space:pre;overflow-x:auto;
+}
+#migration-banner .mb-close{
+  width:26px;height:26px;flex-shrink:0;border-radius:50%;
+  border:1px solid rgba(245,158,11,.3);background:none;
+  color:var(--t3);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;
+}
+#migration-banner .mb-close:hover{border-color:var(--warn);color:var(--warn)}
+
 /* ─── RESPONSIVE ─────────────────────────────────────────────── */
 @media(max-width:480px){
   #app{padding:18px 14px 50px}
@@ -635,6 +667,20 @@ body::before{
 
   <!-- ── TASKS TAB ──────────────────────────────── -->
   <div class="tab-content" id="tab-tasks">
+    <!-- Migration notice (shown if recurrence columns are missing) -->
+    <div id="migration-banner">
+      <span class="mb-ico"><i data-lucide="alert-triangle" class="icon-lg"></i></span>
+      <div class="mb-body">
+        <div class="mb-title">Database migration required for recurring tasks</div>
+        <div class="mb-text">Run this SQL in your <a href="https://supabase.com/dashboard" target="_blank" style="color:var(--warn)">Supabase SQL Editor</a> to enable recurrence support:<code>ALTER TABLE tasks ADD COLUMN IF NOT EXISTS recurrence        TEXT DEFAULT 'none';
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS recurrence_end    DATE;
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS parent_task_id    UUID REFERENCES tasks(id);</code>Tasks still save normally — recurrence settings are ignored until the migration is applied.</div>
+      </div>
+      <button class="mb-close" onclick="document.getElementById('migration-banner').classList.remove('show')">
+        <i data-lucide="x" class="icon-sm"></i>
+      </button>
+    </div>
+
     <div class="status-grid">
       <div class="s-card s-info" id="task-card-open" onclick="toggleTaskFilter('open')">
         <div class="s-card-head">
@@ -807,6 +853,7 @@ const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
 let subs = [], editingId = null, currentUser = null;
 let activeCategory = 'All', activeStatusPanel = null;
 let _tasks = [], _editTid = null, _tFilter = 'open', _collapsed = {};
+let _recSupported = null; // null = unknown, true/false after first task save
 
 /* ═══════════════════════════════════════
    ICONS
@@ -1280,7 +1327,7 @@ async function toggleTC(id) {
   if (error) { console.error(error); return; }
   t.status = ns; t.completed_at = upd.completed_at;
 
-  if (ns==='done' && t.recurrence && t.recurrence!=='none') {
+  if (ns==='done' && _recSupported !== false && t.recurrence && t.recurrence!=='none') {
     const nd = nextDue(t.due_date, t.recurrence);
     if (nd && (!t.recurrence_end || nd <= t.recurrence_end)) {
       const newTask = {
@@ -1295,7 +1342,8 @@ async function toggleTC(id) {
         user_id:       currentUser.id,
       };
       const { error: ie } = await sb.from('tasks').insert(newTask);
-      if (ie) console.error('Recurring insert error:', ie);
+      if (ie && isSchemaError(ie)) { _recSupported = false; showMigrationBanner(); }
+      else if (ie) console.error('Recurring insert error:', ie);
       await loadTasks(); return;
     }
   }
@@ -1342,21 +1390,46 @@ function openTEdit(id) {
 }
 function closeTM() { document.getElementById('tm-ov').classList.remove('show'); _editTid=null; }
 
+function isSchemaError(err) {
+  return err && (err.message||'').toLowerCase().includes('schema cache');
+}
+function showMigrationBanner() {
+  const b = document.getElementById('migration-banner');
+  if (b) { b.classList.add('show'); icons(); }
+}
+
 async function saveT() {
   const title = document.getElementById('t-title').value.trim();
   if (!title) return;
-  const obj = {
+  const base = {
     title,
-    due_date:      document.getElementById('t-due').value||null,
-    priority:      document.getElementById('t-priority').value,
-    notes:         document.getElementById('t-notes').value.trim()||null,
+    due_date: document.getElementById('t-due').value||null,
+    priority: document.getElementById('t-priority').value,
+    notes:    document.getElementById('t-notes').value.trim()||null,
+    user_id:  currentUser.id,
+  };
+  const recFields = {
     recurrence:    document.getElementById('t-recurrence').value||'none',
     recurrence_end:document.getElementById('t-rec-end').value||null,
-    user_id:       currentUser.id,
   };
+
+  // Try with recurrence fields first (if not already known to be unsupported)
+  if (_recSupported !== false) {
+    const obj = { ...base, ...recFields };
+    const { error } = _editTid
+      ? await sb.from('tasks').update(obj).eq('id',_editTid)
+      : await sb.from('tasks').insert({ ...obj, status:'open' });
+    if (!error) { _recSupported = true; closeTM(); await loadTasks(); return; }
+    if (!isSchemaError(error)) { alert('Error: '+error.message); return; }
+    // Schema error — columns don't exist yet, fall through
+    _recSupported = false;
+    showMigrationBanner();
+  }
+
+  // Fallback: save without recurrence fields
   const { error } = _editTid
-    ? await sb.from('tasks').update(obj).eq('id',_editTid)
-    : await sb.from('tasks').insert({ ...obj, status:'open' });
+    ? await sb.from('tasks').update(base).eq('id',_editTid)
+    : await sb.from('tasks').insert({ ...base, status:'open' });
   if (error) { alert('Error: '+error.message); return; }
   closeTM(); await loadTasks();
 }
