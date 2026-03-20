@@ -218,27 +218,30 @@ body::before{
 /* ─── STATUS CARDS ───────────────────────────────────────────── */
 .status-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px}
 .s-card{
-  background:var(--surf);border:1px solid var(--border);
+  background:rgba(255,255,255,.028);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.06);
   border-radius:var(--r3);padding:20px 20px 18px;
   cursor:pointer;transition:all .22s;position:relative;overflow:hidden;
+  box-shadow:0 4px 24px rgba(0,0,0,.35);
 }
 .s-card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .22s}
-.s-card:hover{transform:translateY(-2px);box-shadow:var(--sh-md)}
+.s-card:hover{transform:translateY(-2px)}
 .s-card:hover::before{opacity:1}
 
-.s-card.s-danger{border-color:rgba(239,68,68,.18)}
+.s-card.s-danger{border-color:rgba(239,68,68,.15)}
 .s-card.s-danger::before{background:rgba(239,68,68,.04)}
-.s-card.s-danger:hover{border-color:rgba(239,68,68,.35);box-shadow:0 8px 32px rgba(239,68,68,.14)}
-.s-card.s-warn{border-color:rgba(245,158,11,.18)}
+.s-card.s-danger:hover{border-color:rgba(239,68,68,.3);box-shadow:0 8px 32px rgba(239,68,68,.18),0 0 0 1px rgba(239,68,68,.1)}
+.s-card.s-warn{border-color:rgba(245,158,11,.15)}
 .s-card.s-warn::before{background:rgba(245,158,11,.04)}
-.s-card.s-warn:hover{border-color:rgba(245,158,11,.35);box-shadow:0 8px 32px rgba(245,158,11,.14)}
-.s-card.s-info{border-color:rgba(59,130,246,.18)}
+.s-card.s-warn:hover{border-color:rgba(245,158,11,.3);box-shadow:0 8px 32px rgba(245,158,11,.18),0 0 0 1px rgba(245,158,11,.1)}
+.s-card.s-info{border-color:rgba(59,130,246,.15)}
 .s-card.s-info::before{background:rgba(59,130,246,.04)}
-.s-card.s-info:hover{border-color:rgba(59,130,246,.35);box-shadow:0 8px 32px rgba(59,130,246,.14)}
+.s-card.s-info:hover{border-color:rgba(59,130,246,.3);box-shadow:0 8px 32px rgba(59,130,246,.18),0 0 0 1px rgba(59,130,246,.1)}
 
-.s-card.active-filter.s-danger{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.4)}
-.s-card.active-filter.s-warn{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.4)}
-.s-card.active-filter.s-info{background:rgba(59,130,246,.08);border-color:rgba(59,130,246,.4)}
+.s-card.active-filter.s-danger{background:rgba(239,68,68,.07);border-color:rgba(239,68,68,.35);box-shadow:0 4px 24px rgba(239,68,68,.14)}
+.s-card.active-filter.s-warn{background:rgba(245,158,11,.07);border-color:rgba(245,158,11,.35);box-shadow:0 4px 24px rgba(245,158,11,.14)}
+.s-card.active-filter.s-info{background:rgba(59,130,246,.07);border-color:rgba(59,130,246,.35);box-shadow:0 4px 24px rgba(59,130,246,.14)}
 
 .s-card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
 .s-card-ico{
@@ -280,7 +283,23 @@ body::before{
 .sd-days.soon{color:var(--warn)}
 
 /* ─── FILTER PILLS ────────────────────────────────────────────── */
-.filter-pills{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.filter-pills-wrap{position:relative;margin-bottom:20px}
+.filter-pills-wrap::after{
+  content:'';position:absolute;right:0;top:0;bottom:0;width:40px;
+  background:linear-gradient(to right,transparent,var(--bg));
+  pointer-events:none;border-radius:0 50px 50px 0;
+}
+.filter-pills{
+  display:flex;gap:8px;
+  overflow-x:auto;flex-wrap:nowrap;
+  scrollbar-width:none;-ms-overflow-style:none;
+  padding-right:40px;
+}
+.filter-pills::-webkit-scrollbar{display:none}
+@media(min-width:600px){
+  .filter-pills{flex-wrap:wrap;overflow-x:visible;padding-right:0}
+  .filter-pills-wrap::after{display:none}
+}
 .cat-btn{
   padding:6px 14px;border-radius:50px;
   border:1px solid var(--border);background:none;
@@ -625,7 +644,7 @@ body::before{
       <div id="sd-list"></div>
     </div>
 
-    <div id="category-filter" class="filter-pills"></div>
+    <div class="filter-pills-wrap"><div id="category-filter" class="filter-pills"></div></div>
 
     <button class="btn-add" onclick="openModal()">
       <i data-lucide="plus-circle" class="icon"></i>Add Subscription
@@ -889,7 +908,7 @@ const FAVICONS = {
   'xcloud':'xcloud.host','afrihost':'afrihost.com','planning center':'planningcenter.com',
   'takealot':'takealot.com','secura':'secura.co.za','legalwise':'legalwise.co.za',
   'linkedin':'linkedin.com','discovery':'discovery.co.za','openart':'openart.ai',
-  'openrouter':'openrouter.ai','melon mobile':'melonmobile.com','netflix':'netflix.com',
+  'openrouter':'openrouter.ai','melon mobile':'melonmobile.co.za','netflix':'netflix.com',
   'qustodio':'qustodio.com','shibbolet':'shibbolet.co.za','runner':'runner.app',
   'jpflorida':'jpflorida.org','jpdallas':'jpdallas.org','spotify':'spotify.com',
   'apple':'apple.com','google':'google.com','github':'github.com','notion':'notion.so',
