@@ -584,25 +584,31 @@ body::before{
   gap:10px;
   pointer-events:none;
   border-radius:var(--r2);
+  opacity:0; /* hidden until swipe */
 }
 .tc-reveal.left {
-  background:linear-gradient(90deg,rgba(16,185,129,.9),rgba(16,185,129,.65));
+  background:linear-gradient(90deg,rgba(16,185,129,.95),rgba(16,185,129,.7));
   justify-content:flex-start;color:#fff;
 }
 .tc-reveal.right{
-  background:linear-gradient(270deg,rgba(239,68,68,.9),rgba(239,68,68,.65));
+  background:linear-gradient(270deg,rgba(239,68,68,.95),rgba(239,68,68,.7));
   justify-content:flex-end;color:#fff;
+}
+/* Desktop: hide swipe UI entirely */
+@media (hover:hover) and (pointer:fine){
+  .tc-reveal{display:none}
 }
 
 /* Task card */
 .task-card{
-  background:var(--surf);border:1px solid var(--border);border-left:3px solid transparent;
+  background:#0d1520;border:1px solid var(--border);border-left:3px solid transparent;
   border-radius:var(--r2);padding:20px 18px;
   display:flex;align-items:flex-start;gap:14px;
   cursor:pointer;transition:border-color .2s,box-shadow .2s;
-  position:relative;
+  position:relative;z-index:2;
   will-change:transform;
 }
+body.oled .task-card{background:#080808}
 .task-card:hover{border-color:var(--border2);box-shadow:var(--sh-sm)}
 .task-card.c-overdue{border-left-color:var(--danger)}
 .task-card.c-overdue:hover{box-shadow:0 4px 20px rgba(239,68,68,.12)}
@@ -1527,10 +1533,17 @@ function taskCardWrap(t) {
    SWIPE GESTURES
 ═══════════════════════════════════════ */
 function attachSwipe(wrap) {
-  const card = wrap.querySelector('.task-card');
-  const id = wrap.dataset.id;
-  const THRESH = 0.4;
+  const card     = wrap.querySelector('.task-card');
+  const revL     = wrap.querySelector('.tc-reveal.left');
+  const revR     = wrap.querySelector('.tc-reveal.right');
+  const id       = wrap.dataset.id;
+  const THRESH   = 0.4;
   let startX, startY, dx = 0, dragging = false, pastThreshold = false;
+
+  function resetReveals() {
+    if (revL) revL.style.opacity = '0';
+    if (revR) revR.style.opacity = '0';
+  }
 
   wrap.addEventListener('touchstart', e => {
     startX = e.touches[0].clientX;
@@ -1547,37 +1560,48 @@ function attachSwipe(wrap) {
     const ady = Math.abs(cy - startY);
 
     if (!dragging && adx < 6 && ady < 6) return;
-    // if mostly vertical scroll, bail
-    if (!dragging && ady > adx) return;
+    if (!dragging && ady > adx) return; // vertical scroll takes over
 
     dragging = true;
     dx = cx - startX;
-    const maxSlide = wrap.offsetWidth * 0.6;
-    const clamped = Math.max(-maxSlide, Math.min(maxSlide, dx));
-    card.style.transform = `translateX(${clamped}px)`;
+    const maxSlide = wrap.offsetWidth * 0.65;
+    const clamped  = Math.max(-maxSlide, Math.min(maxSlide, dx));
+    card.style.transform  = `translateX(${clamped}px)`;
     card.style.transition = 'none';
 
-    const ratio = Math.abs(clamped) / wrap.offsetWidth;
-    const crossed = ratio >= THRESH;
+    const ratio   = Math.abs(clamped) / wrap.offsetWidth;
+    const opacity = Math.min(ratio / THRESH, 1);
 
+    if (clamped > 0) {
+      if (revL) revL.style.opacity = String(opacity);
+      if (revR) revR.style.opacity = '0';
+    } else {
+      if (revR) revR.style.opacity = String(opacity);
+      if (revL) revL.style.opacity = '0';
+    }
+
+    const crossed = ratio >= THRESH;
     if (crossed && !pastThreshold) {
       pastThreshold = true;
-      card.style.transform = `translateX(${clamped > 0 ? wrap.offsetWidth * THRESH * 1.05 : -wrap.offsetWidth * THRESH * 1.05}px)`;
+      // subtle scale bump on threshold cross
+      card.style.transform = `translateX(${clamped > 0
+        ? wrap.offsetWidth * THRESH * 1.04
+        : -wrap.offsetWidth * THRESH * 1.04}px) scale(0.98)`;
     } else if (!crossed) {
       pastThreshold = false;
     }
   }, { passive: true });
 
   wrap.addEventListener('touchend', async () => {
-    if (!dragging) return;
+    if (!dragging) { resetReveals(); return; }
     const ratio = Math.abs(dx) / wrap.offsetWidth;
     card.style.transition = 'transform 0.3s cubic-bezier(.16,1,.3,1)';
 
     if (ratio >= THRESH) {
       const dir = dx > 0 ? 'right' : 'left';
-      // animate out
       card.style.transform = `translateX(${dir === 'right' ? '110%' : '-110%'})`;
       await new Promise(r => setTimeout(r, 280));
+      resetReveals();
       if (dir === 'right') {
         await swipeComplete(id);
       } else {
@@ -1585,6 +1609,7 @@ function attachSwipe(wrap) {
       }
     } else {
       card.style.transform = 'translateX(0)';
+      resetReveals();
     }
     dragging = false;
   }, { passive: true });
